@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SokoFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0a0a0a;
+            --surface: #111;
+            --border: #222;
+            --dim: #444;
+            --text: #fff;
+            --accent: #ff6b00;
+            --success: #0f0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        /* Grid */
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(8, 48px);
+            grid-template-rows: repeat(8, 48px);
+            gap: 2px;
+            background: var(--border);
+            padding: 2px;
+        }
+
+        .cell {
+            width: 48px;
+            height: 48px;
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wall { background: #1a1a1a; }
+        
+        .target::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            opacity: 0.5;
+            border-radius: 50%;
+        }
+
+        .box {
+            width: 34px;
+            height: 34px;
+            background: var(--dim);
+            border: 2px solid var(--text);
+        }
+
+        .box.on-target {
+            background: var(--success);
+            border-color: var(--success);
+            box-shadow: 0 0 20px rgba(0,255,0,0.3);
+        }
+
+        .player {
+            width: 30px;
+            height: 30px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255,107,0,0.4);
+        }
+
+        /* Status */
+        .status {
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            color: var(--dim);
+            text-transform: uppercase;
+            height: 16px;
+        }
+
+        .status.solving { color: var(--accent); }
+        .status.solved { color: var(--success); }
+
+        /* Single Button */
+        button {
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 14px 32px;
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        button:hover { opacity: 0.85; }
+        button:active { transform: scale(0.98); }
+
+        /* Stats - minimal */
+        .stats {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            color: var(--dim);
+            display: flex;
+            gap: 24px;
+        }
+
+        .stats span { color: var(--text); }
+    </style>
+</head>
+<body>
+
+    <div id="grid"></div>
+    
+    <div class="status" id="status">Ready</div>
+    
+    <button onclick="toggle()" id="btn">Start</button>
+    
+    <div class="stats">
+        Solved <span id="solved">0</span> · Moves <span id="moves">0</span>
+    </div>
+
+    <script>
+        let running = false;
+        let solved = 0;
+        let moves = 0;
+
+        async function newGame() {
+            const res = await fetch('/api/new_game', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ difficulty: 25 })
+            });
+            const data = await res.json();
+            render(data.grid);
+            return data.solvable;
+        }
+
+        async function step() {
+            const res = await fetch('/api/solve_step', { method: 'POST' });
+            const data = await res.json();
+            render(data.grid);
+            
+            if (data.solved) {
+                solved++;
+                moves += data.steps;
+                document.getElementById('solved').textContent = solved;
+                document.getElementById('moves').textContent = moves;
+                return 'solved';
+            }
+            if (data.gave_up) return 'failed';
+            
+            setStatus(`Solving ${data.steps}/${data.total}`, 'solving');
+            return 'continue';
+        }
+
+        async function run() {
+            while (running) {
+                setStatus('Computing...', 'solving');
+                const ok = await newGame();
+                if (!ok) continue;
+                
+                setStatus('Solving...', 'solving');
+                
+                while (running) {
+                    const result = await step();
+                    if (result === 'solved') {
+                        setStatus('Solved', 'solved');
+                        await sleep(300);
+                        break;
+                    }
+                    if (result === 'failed') {
+                        break;
+                    }
+                    await sleep(15);
+                }
+            }
+        }
+
+        function toggle() {
+            running = !running;
+            document.getElementById('btn').textContent = running ? 'Stop' : 'Start';
+            if (running) run();
+            else setStatus('Paused', '');
+        }
+
+        function setStatus(text, state) {
+            const el = document.getElementById('status');
+            el.textContent = text;
+            el.className = 'status ' + (state || '');
+        }
+
+        function sleep(ms) {
+            return new Promise(r => setTimeout(r, ms));
+        }
+
+        function render(grid) {
+            const container = document.getElementById('grid');
+            container.innerHTML = '';
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const v = grid[r][c];
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    
+                    if (v === 1) cell.classList.add('wall');
+                    if (v === 4) cell.classList.add('target');
+                    if (v === 3) cell.innerHTML = '<div class="box"></div>';
+                    if (v === 5) { cell.classList.add('target'); cell.innerHTML = '<div class="box on-target"></div>'; }
+                    if (v === 2) cell.innerHTML = '<div class="player"></div>';
+                    
+                    container.appendChild(cell);
+                }
+            }
+        }
+
+        newGame();
+    </script>
+</body>
+</html>
