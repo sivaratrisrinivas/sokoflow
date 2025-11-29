@@ -21,26 +21,35 @@ ACTION_MAP = {0: 'UP', 1: 'DOWN', 2: 'LEFT', 3: 'RIGHT'}
 ACTION_DELTAS = {'UP': (-1,0), 'DOWN': (1,0), 'LEFT': (0,-1), 'RIGHT': (0,1)}
 
 # --- LOAD & OPTIMIZE DIFFUSION MODEL ---
-diffusion_model = SokobanDiffusion(seq_len=20, timesteps=100, hidden_dim=128)
+diffusion_model = None
+MODEL_LOADED = False
 
-if os.path.exists("sokoban_diffusion.pth"):
-    diffusion_model.load_state_dict(torch.load("sokoban_diffusion.pth", weights_only=True))
-    diffusion_model.eval()
-    
-    # Optimization 1: Disable gradient computation globally
-    torch.set_grad_enabled(False)
-    
-    # Optimization 2: Use inference mode (faster than no_grad)
-    # Optimization 3: Compile model for faster inference (PyTorch 2.0+)
+model_path = "sokoban_diffusion.pth"
+if os.path.exists(model_path):
     try:
-        diffusion_model = torch.compile(diffusion_model, mode="reduce-overhead")
-        print("🚀 Model compiled with torch.compile!")
-    except:
-        pass
-    
-    print("🎨 Diffusion model loaded & optimized!")
+        diffusion_model = SokobanDiffusion(seq_len=20, timesteps=100, hidden_dim=128)
+        diffusion_model.load_state_dict(torch.load(model_path, weights_only=True))
+        diffusion_model.eval()
+        
+        # Optimization 1: Disable gradient computation globally
+        torch.set_grad_enabled(False)
+        
+        # Optimization 2: Use inference mode (faster than no_grad)
+        # Optimization 3: Compile model for faster inference (PyTorch 2.0+)
+        try:
+            diffusion_model = torch.compile(diffusion_model, mode="reduce-overhead")
+            print("🚀 Model compiled with torch.compile!")
+        except:
+            pass
+        
+        MODEL_LOADED = True
+        print("🎨 Diffusion model loaded & optimized!")
+    except Exception as e:
+        print(f"⚠️ Error loading model: {e}")
+        diffusion_model = None
+        MODEL_LOADED = False
 else:
-    print("⚠️ Train model first: python sokoban_diffusion.py")
+    print(f"⚠️ Model file '{model_path}' not found. Upload model file to Railway.")
 
 # --- GLOBAL STATE ---
 env = SokobanEnv(num_boxes=3)
@@ -76,7 +85,7 @@ def is_valid_move(grid, targets, pos, action):
     return None, None
 
 def is_solved(grid):
-    return np.count_nonzero(grid == 3) == 0
+    return bool(np.count_nonzero(grid == 3) == 0)
 
 def diffusion_solve_fast(grid, targets, max_iters=20):
     """
@@ -85,6 +94,9 @@ def diffusion_solve_fast(grid, targets, max_iters=20):
     - Batch sampling (try 4 sequences, pick best)
     - Early stopping when solved
     """
+    if not MODEL_LOADED or diffusion_model is None:
+        return None  # Model not available
+    
     current_grid = grid.copy()
     current_pos = tuple(map(int, np.argwhere(current_grid == 2)[0]))
     solution = []
@@ -189,8 +201,8 @@ def new_game():
     
     return jsonify({
         'grid': env.grid.tolist(),
-        'targets': env.targets.tolist(),
-        'solvable': solution_path is not None,
+        'targets': env.targets.astype(bool).tolist(),  # Ensure bool conversion
+        'solvable': bool(solution_path is not None),
         'moves': len(solution_path) if solution_path else 0
     })
 
@@ -212,7 +224,7 @@ def solve_step():
         return jsonify({
             'action': 'DONE',
             'grid': env.grid.tolist(),
-            'solved': is_solved(env.grid),
+            'solved': bool(is_solved(env.grid)),
             'steps': solution_index,
             'total': len(solution_path)
         })
@@ -224,7 +236,7 @@ def solve_step():
     return jsonify({
         'action': action,
         'grid': env.grid.tolist(),
-        'solved': is_solved(env.grid),
+        'solved': bool(is_solved(env.grid)),
         'steps': solution_index,
         'total': len(solution_path)
     })
