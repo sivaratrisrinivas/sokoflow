@@ -10,7 +10,6 @@ from flask_cors import CORS
 import torch
 import numpy as np
 import os
-import json
 
 from sokoban_engine import SokobanEnv
 from sokoban_diffusion import SokobanDiffusion, state_to_tensor
@@ -18,111 +17,30 @@ from sokoban_diffusion import SokobanDiffusion, state_to_tensor
 app = Flask(__name__)
 CORS(app)
 
-# Custom JSON provider to handle numpy types (Flask 2.3+)
-try:
-    from flask.json.provider import DefaultJSONProvider
-    
-    class NumpyJSONProvider(DefaultJSONProvider):
-        def default(self, obj):
-            if isinstance(obj, np.integer):
-                return int(obj)
-            elif isinstance(obj, np.floating):
-                return float(obj)
-            elif isinstance(obj, np.bool_):
-                return bool(obj)
-            elif isinstance(obj, np.ndarray):
-                return obj.tolist()
-            return super().default(obj)
-    
-    app.json = NumpyJSONProvider(app)
-except ImportError:
-    # Fallback for older Flask versions
-    class NumpyJSONEncoder(json.JSONEncoder):
-        def default(self, obj):
-            if isinstance(obj, np.integer):
-                return int(obj)
-            elif isinstance(obj, np.floating):
-                return float(obj)
-            elif isinstance(obj, np.bool_):
-                return bool(obj)
-            elif isinstance(obj, np.ndarray):
-                return obj.tolist()
-            return super().default(obj)
-    app.json_encoder = NumpyJSONEncoder
-
-def convert_numpy_types(obj):
-    """Recursively convert numpy types to native Python types for JSON serialization."""
-    # Handle numpy scalars first (before checking for arrays)
-    if isinstance(obj, np.ndarray):
-        # Convert array to list first, then recursively convert elements
-        return [convert_numpy_types(item) for item in obj.tolist()]
-    elif isinstance(obj, (list, tuple)):
-        return [convert_numpy_types(item) for item in obj]
-    elif isinstance(obj, dict):
-        return {key: convert_numpy_types(value) for key, value in obj.items()}
-    # Handle numpy integer types
-    elif isinstance(obj, (np.integer, np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32, np.uint64)):
-        return int(obj)
-    # Handle numpy float types
-    elif isinstance(obj, (np.floating, np.float16, np.float32, np.float64)):
-        return float(obj)
-    # Handle numpy bool - CRITICAL: must check before Python bool
-    elif isinstance(obj, np.bool_):
-        return bool(obj)
-    # For any other numpy type, try to convert using .item()
-    elif hasattr(obj, 'item') and hasattr(obj, 'dtype'):  # numpy scalars have both
-        try:
-            return obj.item()
-        except:
-            return obj
-    # Python native types pass through
-    return obj
-
 ACTION_MAP = {0: 'UP', 1: 'DOWN', 2: 'LEFT', 3: 'RIGHT'}
 ACTION_DELTAS = {'UP': (-1,0), 'DOWN': (1,0), 'LEFT': (0,-1), 'RIGHT': (0,1)}
 
 # --- LOAD & OPTIMIZE DIFFUSION MODEL ---
-diffusion_model = None
-MODEL_LOADED = False
+diffusion_model = SokobanDiffusion(seq_len=20, timesteps=100, hidden_dim=128)
 
-def load_model():
-    """Load the diffusion model."""
-    global diffusion_model, MODEL_LOADED
+if os.path.exists("sokoban_diffusion.pth"):
+    diffusion_model.load_state_dict(torch.load("sokoban_diffusion.pth", weights_only=True))
+    diffusion_model.eval()
     
-    model_path = "sokoban_diffusion.pth"
-    if os.path.exists(model_path):
-        try:
-            diffusion_model = SokobanDiffusion(seq_len=20, timesteps=100, hidden_dim=128)
-            diffusion_model.load_state_dict(torch.load(model_path, weights_only=True))
-            diffusion_model.eval()
-            
-            # Optimization 1: Disable gradient computation globally
-            torch.set_grad_enabled(False)
-            
-            # Optimization 2: Use inference mode (faster than no_grad)
-            # Optimization 3: Compile model for faster inference (PyTorch 2.0+)
-            try:
-                diffusion_model = torch.compile(diffusion_model, mode="reduce-overhead")
-                print("🚀 Model compiled with torch.compile!")
-            except:
-                pass
-            
-            MODEL_LOADED = True
-            print("🎨 Diffusion model loaded & optimized!")
-            return True
-        except Exception as e:
-            print(f"⚠️ Error loading model: {e}")
-            diffusion_model = None
-            MODEL_LOADED = False
-            return False
-    else:
-        # Don't print warning if TRAIN_ON_STARTUP is enabled (Railway will train automatically)
-        if os.environ.get('TRAIN_ON_STARTUP', 'false').lower() != 'true':
-            print(f"⚠️ Model file '{model_path}' not found. Upload model file or enable auto-training.")
-        return False
-
-# Try to load model
-load_model()
+    # Optimization 1: Disable gradient computation globally
+    torch.set_grad_enabled(False)
+    
+    # Optimization 2: Use inference mode (faster than no_grad)
+    # Optimization 3: Compile model for faster inference (PyTorch 2.0+)
+    try:
+        diffusion_model = torch.compile(diffusion_model, mode="reduce-overhead")
+        print("🚀 Model compiled with torch.compile!")
+    except:
+        pass
+    
+    print("🎨 Diffusion model loaded & optimized!")
+else:
+    print("⚠️ Train model first: python sokoban_diffusion.py")
 
 # --- GLOBAL STATE ---
 env = SokobanEnv(num_boxes=3)
@@ -158,9 +76,9 @@ def is_valid_move(grid, targets, pos, action):
     return None, None
 
 def is_solved(grid):
-    # Ensure we return Python bool, not numpy bool
     result = np.count_nonzero(grid == 3) == 0
-    return bool(result) if isinstance(result, (np.bool_, bool)) else bool(result)
+    # Convert numpy bool_ to Python bool for JSON serialization
+    return bool(result)
 
 def diffusion_solve_fast(grid, targets, max_iters=20):
     """
@@ -169,7 +87,7 @@ def diffusion_solve_fast(grid, targets, max_iters=20):
     - Batch sampling (try 4 sequences, pick best)
     - Early stopping when solved
     """
-    if not MODEL_LOADED or diffusion_model is None:
+    if not os.path.exists("sokoban_diffusion.pth"):
         return None  # Model not available
     
     current_grid = grid.copy()
@@ -274,13 +192,9 @@ def new_game():
         # Try easier puzzle
         difficulty = max(8, difficulty - 4)
     
-    # Convert numpy arrays to Python lists - ensure all types are native Python
-    grid_list = env.grid.astype(int).tolist()
-    targets_list = env.targets.astype(int).tolist()
-    
     return jsonify({
-        'grid': grid_list,
-        'targets': targets_list,
+        'grid': env.grid.tolist(),
+        'targets': env.targets.astype(int).tolist(),  # Convert bool array to int for JSON
         'solvable': bool(solution_path is not None),
         'moves': int(len(solution_path) if solution_path else 0)
     })
@@ -290,11 +204,9 @@ def solve_step():
     global solution_index
     
     if not solution_path:
-        grid_list = env.grid.astype(int).tolist()
-        
         return jsonify({
             'action': 'GIVE_UP',
-            'grid': grid_list,
+            'grid': env.grid.tolist(),
             'solved': False,
             'gave_up': True,
             'steps': 0,
@@ -302,13 +214,10 @@ def solve_step():
         })
     
     if solution_index >= len(solution_path):
-        grid_list = convert_numpy_types(env.grid.tolist())
-        solved = bool(is_solved(env.grid))
-        
         return jsonify({
             'action': 'DONE',
-            'grid': grid_list,
-            'solved': solved,
+            'grid': env.grid.tolist(),
+            'solved': is_solved(env.grid),
             'steps': int(solution_index),
             'total': int(len(solution_path))
         })
@@ -317,14 +226,10 @@ def solve_step():
     solution_index += 1
     env.step(action)
     
-    # Ensure all types are Python native - convert array to int first, then to list
-    grid_list = env.grid.astype(int).tolist()
-    solved = bool(is_solved(env.grid))
-    
     return jsonify({
-        'action': str(action),
-        'grid': grid_list,
-        'solved': solved,
+        'action': action,
+        'grid': env.grid.tolist(),
+        'solved': is_solved(env.grid),
         'steps': int(solution_index),
         'total': int(len(solution_path))
     })
