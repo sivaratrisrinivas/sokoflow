@@ -19,18 +19,30 @@ CORS(app)
 
 def convert_numpy_types(obj):
     """Recursively convert numpy types to native Python types for JSON serialization."""
-    if isinstance(obj, np.integer):
-        return int(obj)
-    elif isinstance(obj, np.floating):
-        return float(obj)
-    elif isinstance(obj, np.bool_):
-        return bool(obj)
-    elif isinstance(obj, np.ndarray):
+    # Handle numpy scalars first (before checking for arrays)
+    if isinstance(obj, np.ndarray):
+        # Convert array to list first, then recursively convert elements
         return [convert_numpy_types(item) for item in obj.tolist()]
     elif isinstance(obj, (list, tuple)):
         return [convert_numpy_types(item) for item in obj]
     elif isinstance(obj, dict):
         return {key: convert_numpy_types(value) for key, value in obj.items()}
+    # Handle numpy integer types
+    elif isinstance(obj, (np.integer, np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32, np.uint64)):
+        return int(obj)
+    # Handle numpy float types
+    elif isinstance(obj, (np.floating, np.float16, np.float32, np.float64)):
+        return float(obj)
+    # Handle numpy bool - CRITICAL: must check before Python bool
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    # For any other numpy type, try to convert using .item()
+    elif hasattr(obj, 'item') and hasattr(obj, 'dtype'):  # numpy scalars have both
+        try:
+            return obj.item()
+        except:
+            return obj
+    # Python native types pass through
     return obj
 
 ACTION_MAP = {0: 'UP', 1: 'DOWN', 2: 'LEFT', 3: 'RIGHT'}
@@ -111,7 +123,9 @@ def is_valid_move(grid, targets, pos, action):
     return None, None
 
 def is_solved(grid):
-    return bool(np.count_nonzero(grid == 3) == 0)
+    # Ensure we return Python bool, not numpy bool
+    result = np.count_nonzero(grid == 3) == 0
+    return bool(result) if isinstance(result, (np.bool_, bool)) else bool(result)
 
 def diffusion_solve_fast(grid, targets, max_iters=20):
     """
@@ -225,47 +239,64 @@ def new_game():
         # Try easier puzzle
         difficulty = max(8, difficulty - 4)
     
-    return jsonify(convert_numpy_types({
-        'grid': env.grid.tolist(),
-        'targets': env.targets.tolist(),
-        'solvable': solution_path is not None,
-        'moves': len(solution_path) if solution_path else 0
-    }))
+    # Convert numpy arrays to Python lists with proper type conversion
+    grid_list = convert_numpy_types(env.grid.tolist())
+    targets_list = convert_numpy_types(env.targets.astype(int).tolist())  # Convert bool array to int first
+    
+    return jsonify({
+        'grid': grid_list,
+        'targets': targets_list,
+        'solvable': bool(solution_path is not None),
+        'moves': int(len(solution_path) if solution_path else 0)
+    })
 
 @app.route('/api/solve_step', methods=['POST'])
 def solve_step():
     global solution_index
     
     if not solution_path:
-        return jsonify(convert_numpy_types({
+        grid_list = convert_numpy_types(env.grid.tolist())
+        
+        return jsonify({
             'action': 'GIVE_UP',
-            'grid': env.grid.tolist(),
+            'grid': grid_list,
             'solved': False,
             'gave_up': True,
             'steps': 0,
             'message': 'Diffusion failed'
-        }))
+        })
     
     if solution_index >= len(solution_path):
-        return jsonify(convert_numpy_types({
+        grid_list = convert_numpy_types(env.grid.tolist())
+        solved = bool(is_solved(env.grid))
+        
+        return jsonify({
             'action': 'DONE',
-            'grid': env.grid.tolist(),
-            'solved': is_solved(env.grid),
-            'steps': solution_index,
-            'total': len(solution_path)
-        }))
+            'grid': grid_list,
+            'solved': solved,
+            'steps': int(solution_index),
+            'total': int(len(solution_path))
+        })
     
     action = solution_path[solution_index]
     solution_index += 1
     env.step(action)
     
-    return jsonify(convert_numpy_types({
-        'action': action,
-        'grid': env.grid.tolist(),
-        'solved': is_solved(env.grid),
-        'steps': solution_index,
-        'total': len(solution_path)
-    }))
+    # Convert numpy arrays to Python lists with proper type conversion
+    # Use astype to ensure all values are Python native types
+    grid_array = env.grid.astype(int)  # Convert to int array first
+    grid_list = grid_array.tolist()  # Then convert to list
+    grid_list = convert_numpy_types(grid_list)  # Final pass to catch any remaining numpy types
+    
+    solved = bool(is_solved(env.grid))
+    
+    return jsonify({
+        'action': str(action),  # Ensure string
+        'grid': grid_list,
+        'solved': solved,
+        'steps': int(solution_index),
+        'total': int(len(solution_path))
+    })
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
