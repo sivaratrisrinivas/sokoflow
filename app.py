@@ -10,12 +10,45 @@ from flask_cors import CORS
 import torch
 import numpy as np
 import os
+import json
 
 from sokoban_engine import SokobanEnv
 from sokoban_diffusion import SokobanDiffusion, state_to_tensor
 
 app = Flask(__name__)
 CORS(app)
+
+# Custom JSON provider to handle numpy types (Flask 2.3+)
+try:
+    from flask.json.provider import DefaultJSONProvider
+    
+    class NumpyJSONProvider(DefaultJSONProvider):
+        def default(self, obj):
+            if isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.bool_):
+                return bool(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            return super().default(obj)
+    
+    app.json = NumpyJSONProvider(app)
+except ImportError:
+    # Fallback for older Flask versions
+    class NumpyJSONEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.bool_):
+                return bool(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            return super().default(obj)
+    app.json_encoder = NumpyJSONEncoder
 
 def convert_numpy_types(obj):
     """Recursively convert numpy types to native Python types for JSON serialization."""
@@ -83,7 +116,9 @@ def load_model():
             MODEL_LOADED = False
             return False
     else:
-        print(f"⚠️ Model file '{model_path}' not found.")
+        # Don't print warning if TRAIN_ON_STARTUP is enabled (Railway will train automatically)
+        if os.environ.get('TRAIN_ON_STARTUP', 'false').lower() != 'true':
+            print(f"⚠️ Model file '{model_path}' not found. Upload model file or enable auto-training.")
         return False
 
 # Try to load model
@@ -239,9 +274,9 @@ def new_game():
         # Try easier puzzle
         difficulty = max(8, difficulty - 4)
     
-    # Convert numpy arrays to Python lists with proper type conversion
-    grid_list = convert_numpy_types(env.grid.tolist())
-    targets_list = convert_numpy_types(env.targets.astype(int).tolist())  # Convert bool array to int first
+    # Convert numpy arrays to Python lists - ensure all types are native Python
+    grid_list = env.grid.astype(int).tolist()
+    targets_list = env.targets.astype(int).tolist()
     
     return jsonify({
         'grid': grid_list,
@@ -255,7 +290,7 @@ def solve_step():
     global solution_index
     
     if not solution_path:
-        grid_list = convert_numpy_types(env.grid.tolist())
+        grid_list = env.grid.astype(int).tolist()
         
         return jsonify({
             'action': 'GIVE_UP',
@@ -282,16 +317,12 @@ def solve_step():
     solution_index += 1
     env.step(action)
     
-    # Convert numpy arrays to Python lists with proper type conversion
-    # Use astype to ensure all values are Python native types
-    grid_array = env.grid.astype(int)  # Convert to int array first
-    grid_list = grid_array.tolist()  # Then convert to list
-    grid_list = convert_numpy_types(grid_list)  # Final pass to catch any remaining numpy types
-    
+    # Ensure all types are Python native - convert array to int first, then to list
+    grid_list = env.grid.astype(int).tolist()
     solved = bool(is_solved(env.grid))
     
     return jsonify({
-        'action': str(action),  # Ensure string
+        'action': str(action),
         'grid': grid_list,
         'solved': solved,
         'steps': int(solution_index),
