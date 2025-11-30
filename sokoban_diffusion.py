@@ -325,7 +325,7 @@ def train_diffusion(epochs=500, use_validation=True, dataset_path="sokoban_datas
     """
     print("🚀 Training Sokoban Diffusion Model")
     if epochs < 500:
-        print(f"⚡ Fast training mode: {epochs} epochs (Railway-optimized)")
+        print(f"⚡ Fast training mode: {epochs} epochs")
     print("-" * 50)
     
     # Load data

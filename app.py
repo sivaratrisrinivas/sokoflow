@@ -10,7 +10,6 @@ from flask_cors import CORS
 import torch
 import numpy as np
 import os
-import json
 
 from sokoban_engine import SokobanEnv
 from sokoban_diffusion import SokobanDiffusion, state_to_tensor
@@ -166,13 +165,6 @@ def diffusion_solve_fast(grid, targets, max_iters=20):
 def index():
     return render_template('index.html')
 
-@app.route('/api/set_boxes', methods=['POST'])
-def set_boxes():
-    global env
-    boxes = max(2, min(4, request.json.get('boxes', 3)))
-    env = SokobanEnv(num_boxes=boxes)
-    return jsonify(to_python_types({'boxes': boxes}))
-
 @app.route('/api/new_game', methods=['POST'])
 def new_game():
     global solution_path, solution_index
@@ -219,34 +211,24 @@ def solve_step():
         return jsonify(to_python_types({
             'action': 'DONE',
             'grid': env.grid,
-            'solved': bool(is_solved(env.grid)),  # Ensure Python bool
-            'steps': int(solution_index),
-            'total': int(len(solution_path))
+            'solved': is_solved(env.grid),
+            'steps': solution_index,
+            'total': len(solution_path)
         }))
     
     action = solution_path[solution_index]
     solution_index += 1
     env.step(action)
     
-    # Explicitly ensure all values are Python native types before JSON serialization
-    solved_status = is_solved(env.grid)
-    
     response = {
         'action': action,
         'grid': env.grid,
-        'solved': bool(solved_status),  # Double-check: ensure Python bool
-        'steps': int(solution_index),   # Ensure Python int
-        'total': int(len(solution_path))  # Ensure Python int
+        'solved': is_solved(env.grid),
+        'steps': solution_index,
+        'total': len(solution_path)
     }
     
-    # Convert and verify types before JSON serialization
-    converted_response = to_python_types(response)
-    
-    # Debug: Log types to verify conversion (remove after confirming fix)
-    print(f"[DEBUG] solve_step response types: {[(k, type(v).__name__) for k, v in converted_response.items()]}")
-    print(f"[DEBUG] solved value: {converted_response['solved']} (type: {type(converted_response['solved']).__name__})")
-    
-    return jsonify(converted_response)
+    return jsonify(to_python_types(response))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

@@ -182,24 +182,3 @@ class SokobanEnv:
         else:
             # If it's a box moving onto a target, it becomes BOX_TARGET (5)
             self.grid[nr, nc] = BOX_TARGET if is_target_dest else BOX
-
-    def render(self):
-        """Prints the board to the console."""
-        # Visual mapping
-        chars = {0: ' . ', 1: '###', 2: ' @ ', 3: '[#]', 4: ' X ', 5: '[X]'}
-        
-        print("\n")
-        for r in range(self.height):
-            line = ""
-            for c in range(self.width):
-                cell_val = self.grid[r, c]
-                
-                # Special rendering case: Player standing on a Target
-                if cell_val == PLAYER and self.targets[r, c]:
-                    line += " @ " 
-                # Special rendering case: Empty Target (Floor + Target Memory)
-                elif cell_val == FLOOR and self.targets[r, c]:
-                    line += chars[TARGET]
-                else:
-                    line += chars[cell_val]
-            print(line)
