@@ -29,8 +29,11 @@ def to_python_types(obj):
         return [to_python_types(x) for x in obj]
     elif isinstance(obj, np.ndarray):
         return to_python_types(obj.tolist())
+    elif isinstance(obj, np.bool_):
+        # Explicitly handle numpy bool_ type (np.bool_ is a subclass of bool, so check first)
+        return bool(obj.item())
     elif isinstance(obj, np.generic):
-        # Handles all numpy scalars: np.bool_, np.int64, np.float32, etc.
+        # Handles all numpy scalars: np.int64, np.float32, etc.
         return obj.item()
     return obj
 
@@ -86,7 +89,9 @@ def is_valid_move(grid, targets, pos, action):
     return None, None
 
 def is_solved(grid):
-    return int(np.count_nonzero(grid == 3)) == 0
+    # Explicitly convert to Python bool to avoid numpy bool serialization issues
+    result = int(np.count_nonzero(grid == 3)) == 0
+    return bool(result)  # Ensure it's a Python bool, not numpy bool_
 
 def diffusion_solve_fast(grid, targets, max_iters=20):
     if not os.path.exists("sokoban_diffusion.pth"):
@@ -214,23 +219,34 @@ def solve_step():
         return jsonify(to_python_types({
             'action': 'DONE',
             'grid': env.grid,
-            'solved': is_solved(env.grid),
-            'steps': solution_index,
-            'total': len(solution_path)
+            'solved': bool(is_solved(env.grid)),  # Ensure Python bool
+            'steps': int(solution_index),
+            'total': int(len(solution_path))
         }))
     
     action = solution_path[solution_index]
     solution_index += 1
     env.step(action)
     
+    # Explicitly ensure all values are Python native types before JSON serialization
+    solved_status = is_solved(env.grid)
+    
     response = {
         'action': action,
         'grid': env.grid,
-        'solved': is_solved(env.grid),
-        'steps': solution_index,
-        'total': len(solution_path)
+        'solved': bool(solved_status),  # Double-check: ensure Python bool
+        'steps': int(solution_index),   # Ensure Python int
+        'total': int(len(solution_path))  # Ensure Python int
     }
-    return jsonify(to_python_types(response))
+    
+    # Convert and verify types before JSON serialization
+    converted_response = to_python_types(response)
+    
+    # Debug: Log types to verify conversion (remove after confirming fix)
+    print(f"[DEBUG] solve_step response types: {[(k, type(v).__name__) for k, v in converted_response.items()]}")
+    print(f"[DEBUG] solved value: {converted_response['solved']} (type: {type(converted_response['solved']).__name__})")
+    
+    return jsonify(converted_response)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
