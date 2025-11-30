@@ -20,8 +20,8 @@ CORS(app)
 
 def to_python_types(obj):
     """
-    Deeply convert numpy types to native Python types.
-    This is the most robust way to ensure JSON serializability.
+    Recursively convert numpy types to native Python types for JSON serialization.
+    This bypasses any Flask/NumPy version incompatibilities.
     """
     if isinstance(obj, dict):
         return {k: to_python_types(v) for k, v in obj.items()}
@@ -29,16 +29,9 @@ def to_python_types(obj):
         return [to_python_types(x) for x in obj]
     elif isinstance(obj, np.ndarray):
         return to_python_types(obj.tolist())
-    elif isinstance(obj, (np.int_, np.intc, np.intp, np.int8,
-                          np.int16, np.int32, np.int64, np.uint8,
-                          np.uint16, np.uint32, np.uint64)):
-        return int(obj)
-    elif isinstance(obj, (np.float_, np.float16, np.float32, np.float64)):
-        return float(obj)
-    elif isinstance(obj, (np.bool_, bool)): # Handle np.bool_ and python bool
-        return bool(obj)
-    elif isinstance(obj, np.void): 
-        return None 
+    elif isinstance(obj, np.generic):
+        # Handles all numpy scalars: np.bool_, np.int64, np.float32, etc.
+        return obj.item()
     return obj
 
 ACTION_MAP = {0: 'UP', 1: 'DOWN', 2: 'LEFT', 3: 'RIGHT'}
@@ -93,7 +86,6 @@ def is_valid_move(grid, targets, pos, action):
     return None, None
 
 def is_solved(grid):
-    # Returns standard python boolean
     return int(np.count_nonzero(grid == 3)) == 0
 
 def diffusion_solve_fast(grid, targets, max_iters=20):
@@ -184,6 +176,7 @@ def new_game():
     
     difficulty = request.json.get('difficulty', 20)
     
+    # Try to generate and solve
     for attempt in range(5):
         env.reset_solved()
         for _ in range(difficulty):
@@ -200,6 +193,7 @@ def new_game():
         'solvable': bool(solution_path is not None),
         'moves': len(solution_path) if solution_path else 0
     }
+    # Sanitize response before JSON serialization
     return jsonify(to_python_types(response))
 
 @app.route('/api/solve_step', methods=['POST'])
