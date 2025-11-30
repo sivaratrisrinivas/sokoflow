@@ -6,6 +6,7 @@ Flow = The denoising process that transforms random moves → optimal solution.
 """
 
 from flask import Flask, jsonify, request, render_template
+from flask.json.provider import DefaultJSONProvider
 from flask_cors import CORS
 import torch
 import numpy as np
@@ -18,22 +19,39 @@ from sokoban_diffusion import SokobanDiffusion, state_to_tensor
 app = Flask(__name__)
 CORS(app)
 
-# Helper to ensure all values are Python native types
+# --- CUSTOM JSON PROVIDER ---
+class NumpyJSONProvider(DefaultJSONProvider):
+    """
+    Custom JSON Provider to automatically handle NumPy types.
+    This prevents "TypeError: Object of type ... is not JSON serializable"
+    """
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.generic):
+            return obj.item()
+        return super().default(obj)
+
+# Register the custom provider
+app.json = NumpyJSONProvider(app)
+
+# Helper to ensure all values are Python native types (kept for extra safety)
 def make_json_safe(obj):
     """Recursively convert numpy types to Python native types."""
-    # Handle dictionaries
     if isinstance(obj, dict):
         return {k: make_json_safe(v) for k, v in obj.items()}
-    # Handle lists/tuples
     elif isinstance(obj, (list, tuple)):
         return [make_json_safe(item) for item in obj]
-    # Handle numpy arrays
     elif isinstance(obj, np.ndarray):
         return make_json_safe(obj.tolist())
-    # Handle numpy scalars (bool_, int64, float32, etc) - np.generic is base class for all
     elif isinstance(obj, np.generic):
         return obj.item()
-    # Handle python types explicitly if needed, otherwise return as is
     return obj
 
 ACTION_MAP = {0: 'UP', 1: 'DOWN', 2: 'LEFT', 3: 'RIGHT'}
@@ -43,21 +61,24 @@ ACTION_DELTAS = {'UP': (-1,0), 'DOWN': (1,0), 'LEFT': (0,-1), 'RIGHT': (0,1)}
 diffusion_model = SokobanDiffusion(seq_len=20, timesteps=100, hidden_dim=128)
 
 if os.path.exists("sokoban_diffusion.pth"):
-    diffusion_model.load_state_dict(torch.load("sokoban_diffusion.pth", weights_only=True))
-    diffusion_model.eval()
-    
-    # Optimization 1: Disable gradient computation globally
-    torch.set_grad_enabled(False)
-    
-    # Optimization 2: Use inference mode (faster than no_grad)
-    # Optimization 3: Compile model for faster inference (PyTorch 2.0+)
     try:
-        diffusion_model = torch.compile(diffusion_model, mode="reduce-overhead")
-        print("🚀 Model compiled with torch.compile!")
-    except:
-        pass
-    
-    print("🎨 Diffusion model loaded & optimized!")
+        diffusion_model.load_state_dict(torch.load("sokoban_diffusion.pth", weights_only=True))
+        diffusion_model.eval()
+        
+        # Optimization 1: Disable gradient computation globally
+        torch.set_grad_enabled(False)
+        
+        # Optimization 2: Use inference mode (faster than no_grad)
+        # Optimization 3: Compile model for faster inference (PyTorch 2.0+)
+        try:
+            diffusion_model = torch.compile(diffusion_model, mode="reduce-overhead")
+            print("🚀 Model compiled with torch.compile!")
+        except:
+            pass
+        
+        print("🎨 Diffusion model loaded & optimized!")
+    except Exception as e:
+        print(f"⚠️ Failed to load model: {e}")
 else:
     print("⚠️ Train model first: python sokoban_diffusion.py")
 
@@ -96,7 +117,6 @@ def is_valid_move(grid, targets, pos, action):
 
 def is_solved(grid):
     result = np.count_nonzero(grid == 3) == 0
-    # Convert numpy bool_ to Python bool for JSON serialization
     return bool(result)
 
 def diffusion_solve_fast(grid, targets, max_iters=20):
@@ -217,7 +237,7 @@ def new_game():
         'solvable': bool(solution_path is not None),
         'moves': int(len(solution_path) if solution_path else 0)
     }
-    return jsonify(make_json_safe(response))
+    return jsonify(response)
 
 @app.route('/api/solve_step', methods=['POST'])
 def solve_step():
@@ -232,7 +252,7 @@ def solve_step():
             'steps': 0,
             'message': 'Diffusion failed'
         }
-        return jsonify(make_json_safe(response))
+        return jsonify(response)
     
     if solution_index >= len(solution_path):
         response = {
@@ -242,13 +262,12 @@ def solve_step():
             'steps': int(solution_index),
             'total': int(len(solution_path))
         }
-        return jsonify(make_json_safe(response))
+        return jsonify(response)
     
     action = solution_path[solution_index]
     solution_index += 1
     env.step(action)
     
-    # Prepare response with all Python native types
     response = {
         'action': str(action),
         'grid': env.grid.astype(int).tolist(),
@@ -256,7 +275,7 @@ def solve_step():
         'steps': int(solution_index),
         'total': int(len(solution_path))
     }
-    return jsonify(make_json_safe(response))
+    return jsonify(response)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
