@@ -6,7 +6,6 @@ Flow = The denoising process that transforms random moves → optimal solution.
 """
 
 from flask import Flask, jsonify, request, render_template
-from flask.json.provider import DefaultJSONProvider
 from flask_cors import CORS
 import torch
 import numpy as np
@@ -19,64 +18,42 @@ from sokoban_diffusion import SokobanDiffusion, state_to_tensor
 app = Flask(__name__)
 CORS(app)
 
-# --- CUSTOM JSON PROVIDER ---
-class NumpyJSONProvider(DefaultJSONProvider):
+def to_python_types(obj):
     """
-    Custom JSON Provider to automatically handle NumPy types.
-    This prevents "TypeError: Object of type ... is not JSON serializable"
+    Deeply convert numpy types to native Python types.
+    This is the most robust way to ensure JSON serializability.
     """
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.bool_):
-            return bool(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, np.generic):
-            return obj.item()
-        return super().default(obj)
-
-# Register the custom provider
-app.json = NumpyJSONProvider(app)
-
-# Helper to ensure all values are Python native types (kept for extra safety)
-def make_json_safe(obj):
-    """Recursively convert numpy types to Python native types."""
     if isinstance(obj, dict):
-        return {k: make_json_safe(v) for k, v in obj.items()}
+        return {k: to_python_types(v) for k, v in obj.items()}
     elif isinstance(obj, (list, tuple)):
-        return [make_json_safe(item) for item in obj]
+        return [to_python_types(x) for x in obj]
     elif isinstance(obj, np.ndarray):
-        return make_json_safe(obj.tolist())
-    elif isinstance(obj, np.generic):
-        return obj.item()
+        return to_python_types(obj.tolist())
+    elif isinstance(obj, (np.int_, np.intc, np.intp, np.int8,
+                          np.int16, np.int32, np.int64, np.uint8,
+                          np.uint16, np.uint32, np.uint64)):
+        return int(obj)
+    elif isinstance(obj, (np.float_, np.float16, np.float32, np.float64)):
+        return float(obj)
+    elif isinstance(obj, (np.bool_, bool)): # Handle np.bool_ and python bool
+        return bool(obj)
+    elif isinstance(obj, np.void): 
+        return None 
     return obj
 
 ACTION_MAP = {0: 'UP', 1: 'DOWN', 2: 'LEFT', 3: 'RIGHT'}
 ACTION_DELTAS = {'UP': (-1,0), 'DOWN': (1,0), 'LEFT': (0,-1), 'RIGHT': (0,1)}
 
-# --- LOAD & OPTIMIZE DIFFUSION MODEL ---
+# --- LOAD MODEL ---
 diffusion_model = SokobanDiffusion(seq_len=20, timesteps=100, hidden_dim=128)
 
 if os.path.exists("sokoban_diffusion.pth"):
     try:
-        diffusion_model.load_state_dict(torch.load("sokoban_diffusion.pth", weights_only=True))
+        # map_location='cpu' ensures it loads even if trained on GPU
+        diffusion_model.load_state_dict(torch.load("sokoban_diffusion.pth", map_location='cpu', weights_only=True))
         diffusion_model.eval()
-        
-        # Optimization 1: Disable gradient computation globally
         torch.set_grad_enabled(False)
-        
-        # Optimization 2: Use inference mode (faster than no_grad)
-        # Optimization 3: Compile model for faster inference (PyTorch 2.0+)
-        try:
-            diffusion_model = torch.compile(diffusion_model, mode="reduce-overhead")
-            print("🚀 Model compiled with torch.compile!")
-        except:
-            pass
-        
-        print("🎨 Diffusion model loaded & optimized!")
+        print("🎨 Diffusion model loaded!")
     except Exception as e:
         print(f"⚠️ Failed to load model: {e}")
 else:
@@ -116,18 +93,12 @@ def is_valid_move(grid, targets, pos, action):
     return None, None
 
 def is_solved(grid):
-    result = np.count_nonzero(grid == 3) == 0
-    return bool(result)
+    # Returns standard python boolean
+    return int(np.count_nonzero(grid == 3)) == 0
 
 def diffusion_solve_fast(grid, targets, max_iters=20):
-    """
-    Optimized diffusion solving:
-    - DDIM sampling (10 steps instead of 100)  
-    - Batch sampling (try 4 sequences, pick best)
-    - Early stopping when solved
-    """
     if not os.path.exists("sokoban_diffusion.pth"):
-        return None  # Model not available
+        return None
     
     current_grid = grid.copy()
     current_pos = tuple(map(int, np.argwhere(current_grid == 2)[0]))
@@ -138,14 +109,13 @@ def diffusion_solve_fast(grid, targets, max_iters=20):
         if is_solved(current_grid):
             return solution
         
-        # Batch sample: generate 4 action sequences in parallel
+        # Batch sample
         state_tensor = state_to_tensor(current_grid).unsqueeze(0)
-        batch_state = state_tensor.repeat(4, 1, 1, 1)  # (4, 6, 8, 8)
+        batch_state = state_tensor.repeat(4, 1, 1, 1)
         
         with torch.inference_mode():
-            all_actions = diffusion_model.sample_fast(batch_state, steps=10)  # (4, 20)
+            all_actions = diffusion_model.sample_fast(batch_state, steps=10)
         
-        # Try each sequence, pick the one that makes most progress
         best_progress = 0
         best_result = None
         
@@ -159,7 +129,6 @@ def diffusion_solve_fast(grid, targets, max_iters=20):
             
             for action_idx in actions:
                 if is_solved(test_grid):
-                    # Found solution! Return immediately
                     return solution + test_solution
                 
                 action = ACTION_MAP[action_idx]
@@ -173,7 +142,6 @@ def diffusion_solve_fast(grid, targets, max_iters=20):
                         test_pos = new_pos
                         test_solution.append(action)
             
-            # Score: moves made + bonus for boxes on targets
             boxes_done = np.count_nonzero(test_grid == 5)
             progress = len(test_solution) + boxes_done * 2
             
@@ -181,12 +149,11 @@ def diffusion_solve_fast(grid, targets, max_iters=20):
                 best_progress = progress
                 best_result = (test_grid, test_pos, test_solution, test_visited)
         
-        # Apply best sequence
         if best_result and best_result[2]:
             current_grid, current_pos, new_moves, visited = best_result
             solution.extend(new_moves)
         else:
-            # Stuck - try random escape
+            # Random escape
             for action in ['UP', 'DOWN', 'LEFT', 'RIGHT']:
                 new_grid, new_pos = is_valid_move(current_grid, targets, current_pos, action)
                 if new_grid is not None and new_grid.tobytes() not in visited:
@@ -207,7 +174,7 @@ def set_boxes():
     global env
     boxes = max(2, min(4, request.json.get('boxes', 3)))
     env = SokobanEnv(num_boxes=boxes)
-    return jsonify({'boxes': boxes})
+    return jsonify(to_python_types({'boxes': boxes}))
 
 @app.route('/api/new_game', methods=['POST'])
 def new_game():
@@ -217,65 +184,59 @@ def new_game():
     
     difficulty = request.json.get('difficulty', 20)
     
-    # Generate puzzle and solve with diffusion
     for attempt in range(5):
         env.reset_solved()
         for _ in range(difficulty):
             env.step_reverse()
         
         solution_path = diffusion_solve_fast(env.grid, env.targets)
-        
         if solution_path:
             break
-        
-        # Try easier puzzle
         difficulty = max(8, difficulty - 4)
     
     response = {
-        'grid': env.grid.astype(int).tolist(),
-        'targets': env.targets.astype(int).tolist(),
+        'grid': env.grid,
+        'targets': env.targets,
         'solvable': bool(solution_path is not None),
-        'moves': int(len(solution_path) if solution_path else 0)
+        'moves': len(solution_path) if solution_path else 0
     }
-    return jsonify(response)
+    return jsonify(to_python_types(response))
 
 @app.route('/api/solve_step', methods=['POST'])
 def solve_step():
     global solution_index
     
     if not solution_path:
-        response = {
+        return jsonify(to_python_types({
             'action': 'GIVE_UP',
-            'grid': env.grid.astype(int).tolist(),
+            'grid': env.grid,
             'solved': False,
             'gave_up': True,
             'steps': 0,
             'message': 'Diffusion failed'
-        }
-        return jsonify(response)
+        }))
     
     if solution_index >= len(solution_path):
-        response = {
+        return jsonify(to_python_types({
             'action': 'DONE',
-            'grid': env.grid.astype(int).tolist(),
-            'solved': bool(is_solved(env.grid)),
-            'steps': int(solution_index),
-            'total': int(len(solution_path))
-        }
-        return jsonify(response)
+            'grid': env.grid,
+            'solved': is_solved(env.grid),
+            'steps': solution_index,
+            'total': len(solution_path)
+        }))
     
     action = solution_path[solution_index]
     solution_index += 1
     env.step(action)
     
     response = {
-        'action': str(action),
-        'grid': env.grid.astype(int).tolist(),
-        'solved': bool(is_solved(env.grid)),
-        'steps': int(solution_index),
-        'total': int(len(solution_path))
+        'action': action,
+        'grid': env.grid,
+        'solved': is_solved(env.grid),
+        'steps': solution_index,
+        'total': len(solution_path)
     }
-    return jsonify(response)
+    return jsonify(to_python_types(response))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
