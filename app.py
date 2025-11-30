@@ -17,6 +17,22 @@ from sokoban_diffusion import SokobanDiffusion, state_to_tensor
 app = Flask(__name__)
 CORS(app)
 
+def convert_numpy_types(obj):
+    """Recursively convert numpy types to native Python types for JSON serialization."""
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    elif isinstance(obj, np.ndarray):
+        return [convert_numpy_types(item) for item in obj.tolist()]
+    elif isinstance(obj, (list, tuple)):
+        return [convert_numpy_types(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    return obj
+
 ACTION_MAP = {0: 'UP', 1: 'DOWN', 2: 'LEFT', 3: 'RIGHT'}
 ACTION_DELTAS = {'UP': (-1,0), 'DOWN': (1,0), 'LEFT': (0,-1), 'RIGHT': (0,1)}
 
@@ -24,32 +40,42 @@ ACTION_DELTAS = {'UP': (-1,0), 'DOWN': (1,0), 'LEFT': (0,-1), 'RIGHT': (0,1)}
 diffusion_model = None
 MODEL_LOADED = False
 
-model_path = "sokoban_diffusion.pth"
-if os.path.exists(model_path):
-    try:
-        diffusion_model = SokobanDiffusion(seq_len=20, timesteps=100, hidden_dim=128)
-        diffusion_model.load_state_dict(torch.load(model_path, weights_only=True))
-        diffusion_model.eval()
-        
-        # Optimization 1: Disable gradient computation globally
-        torch.set_grad_enabled(False)
-        
-        # Optimization 2: Use inference mode (faster than no_grad)
-        # Optimization 3: Compile model for faster inference (PyTorch 2.0+)
+def load_model():
+    """Load the diffusion model."""
+    global diffusion_model, MODEL_LOADED
+    
+    model_path = "sokoban_diffusion.pth"
+    if os.path.exists(model_path):
         try:
-            diffusion_model = torch.compile(diffusion_model, mode="reduce-overhead")
-            print("🚀 Model compiled with torch.compile!")
-        except:
-            pass
-        
-        MODEL_LOADED = True
-        print("🎨 Diffusion model loaded & optimized!")
-    except Exception as e:
-        print(f"⚠️ Error loading model: {e}")
-        diffusion_model = None
-        MODEL_LOADED = False
-else:
-    print(f"⚠️ Model file '{model_path}' not found. Upload model file to Railway.")
+            diffusion_model = SokobanDiffusion(seq_len=20, timesteps=100, hidden_dim=128)
+            diffusion_model.load_state_dict(torch.load(model_path, weights_only=True))
+            diffusion_model.eval()
+            
+            # Optimization 1: Disable gradient computation globally
+            torch.set_grad_enabled(False)
+            
+            # Optimization 2: Use inference mode (faster than no_grad)
+            # Optimization 3: Compile model for faster inference (PyTorch 2.0+)
+            try:
+                diffusion_model = torch.compile(diffusion_model, mode="reduce-overhead")
+                print("🚀 Model compiled with torch.compile!")
+            except:
+                pass
+            
+            MODEL_LOADED = True
+            print("🎨 Diffusion model loaded & optimized!")
+            return True
+        except Exception as e:
+            print(f"⚠️ Error loading model: {e}")
+            diffusion_model = None
+            MODEL_LOADED = False
+            return False
+    else:
+        print(f"⚠️ Model file '{model_path}' not found.")
+        return False
+
+# Try to load model
+load_model()
 
 # --- GLOBAL STATE ---
 env = SokobanEnv(num_boxes=3)
@@ -199,47 +225,47 @@ def new_game():
         # Try easier puzzle
         difficulty = max(8, difficulty - 4)
     
-    return jsonify({
+    return jsonify(convert_numpy_types({
         'grid': env.grid.tolist(),
-        'targets': env.targets.astype(bool).tolist(),  # Ensure bool conversion
-        'solvable': bool(solution_path is not None),
+        'targets': env.targets.tolist(),
+        'solvable': solution_path is not None,
         'moves': len(solution_path) if solution_path else 0
-    })
+    }))
 
 @app.route('/api/solve_step', methods=['POST'])
 def solve_step():
     global solution_index
     
     if not solution_path:
-        return jsonify({
+        return jsonify(convert_numpy_types({
             'action': 'GIVE_UP',
             'grid': env.grid.tolist(),
             'solved': False,
             'gave_up': True,
             'steps': 0,
             'message': 'Diffusion failed'
-        })
+        }))
     
     if solution_index >= len(solution_path):
-        return jsonify({
+        return jsonify(convert_numpy_types({
             'action': 'DONE',
             'grid': env.grid.tolist(),
-            'solved': bool(is_solved(env.grid)),
+            'solved': is_solved(env.grid),
             'steps': solution_index,
             'total': len(solution_path)
-        })
+        }))
     
     action = solution_path[solution_index]
     solution_index += 1
     env.step(action)
     
-    return jsonify({
+    return jsonify(convert_numpy_types({
         'action': action,
         'grid': env.grid.tolist(),
-        'solved': bool(is_solved(env.grid)),
+        'solved': is_solved(env.grid),
         'steps': solution_index,
         'total': len(solution_path)
-    })
+    }))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

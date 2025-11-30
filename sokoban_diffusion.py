@@ -313,13 +313,23 @@ def infer_action(curr_grid, next_grid):
     if diff[1] == 1:  return 3  # RIGHT
     return 0
 
-def train_diffusion():
-    """Train the diffusion model on Sokoban trajectories."""
+def train_diffusion(epochs=500, use_validation=True, dataset_path="sokoban_dataset.npy", model_path="sokoban_diffusion.pth"):
+    """
+    Train the diffusion model on Sokoban trajectories.
+    
+    Args:
+        epochs: Number of training epochs (default: 500)
+        use_validation: Whether to use train/val split (default: True)
+        dataset_path: Path to dataset file (default: "sokoban_dataset.npy")
+        model_path: Path to save model (default: "sokoban_diffusion.pth")
+    """
     print("🚀 Training Sokoban Diffusion Model")
+    if epochs < 500:
+        print(f"⚡ Fast training mode: {epochs} epochs (Railway-optimized)")
     print("-" * 50)
     
     # Load data
-    data = np.load("sokoban_dataset.npy", allow_pickle=True)
+    data = np.load(dataset_path, allow_pickle=True)
     print(f"📊 Loaded {len(data)} trajectories")
     
     # Prepare training data
@@ -361,22 +371,27 @@ def train_diffusion():
     all_states = torch.tensor(all_states)
     all_actions = torch.tensor(all_actions)
     
-    # Split into train/validation (80/20)
-    split_idx = int(len(all_states) * 0.8)
-    train_states = all_states[:split_idx]
-    train_actions = all_actions[:split_idx]
-    val_states = all_states[split_idx:]
-    val_actions = all_actions[split_idx:]
-    
-    print(f"📊 Train samples: {len(train_states)}, Val samples: {len(val_states)}")
+    # Split into train/validation (80/20) if validation enabled
+    if use_validation:
+        split_idx = int(len(all_states) * 0.8)
+        train_states = all_states[:split_idx]
+        train_actions = all_actions[:split_idx]
+        val_states = all_states[split_idx:]
+        val_actions = all_actions[split_idx:]
+        print(f"📊 Train samples: {len(train_states)}, Val samples: {len(val_states)}")
+    else:
+        train_states = all_states
+        train_actions = all_actions
+        val_states = None
+        val_actions = None
+        print(f"📊 Training samples: {len(train_states)} (no validation split)")
     
     # Create model
     model = SokobanDiffusion(seq_len=seq_len, timesteps=100, hidden_dim=128)
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0.01)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=500)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
     
     # Training settings
-    epochs = 500  # More epochs for better convergence
     batch_size = 64  # Larger batch for stability
     best_train_loss = float('inf')
     best_val_loss = float('inf')
@@ -412,39 +427,51 @@ def train_diffusion():
         avg_train_loss = total_train_loss / num_batches
         
         # ========== VALIDATION ==========
-        model.eval()
-        total_val_loss = 0
-        val_batches = 0
-        
-        with torch.no_grad():
-            for i in range(0, len(val_states), batch_size):
-                states = val_states[i:i+batch_size]
-                actions = val_actions[i:i+batch_size]
-                
-                loss = model.p_losses(actions, states)
-                total_val_loss += loss.item()
-                val_batches += 1
-        
-        avg_val_loss = total_val_loss / val_batches
+        if use_validation and val_states is not None:
+            model.eval()
+            total_val_loss = 0
+            val_batches = 0
+            
+            with torch.no_grad():
+                for i in range(0, len(val_states), batch_size):
+                    states = val_states[i:i+batch_size]
+                    actions = val_actions[i:i+batch_size]
+                    
+                    loss = model.p_losses(actions, states)
+                    total_val_loss += loss.item()
+                    val_batches += 1
+            
+            avg_val_loss = total_val_loss / val_batches
+            
+            # Save best model based on validation loss
+            if avg_val_loss < best_val_loss:
+                best_val_loss = avg_val_loss
+                best_train_loss = avg_train_loss
+                torch.save(model.state_dict(), model_path)
+            
+            # Print progress
+            if epoch % 50 == 0 or epoch < 10:
+                lr = scheduler.get_last_lr()[0]
+                print(f"Epoch {epoch:3d}: Train = {avg_train_loss:.4f}, Val = {avg_val_loss:.4f}, LR = {lr:.6f}")
+        else:
+            # No validation - save based on training loss
+            if avg_train_loss < best_train_loss:
+                best_train_loss = avg_train_loss
+                torch.save(model.state_dict(), model_path)
+            
+            # Print progress
+            if epoch % 50 == 0 or epoch < 10:
+                lr = scheduler.get_last_lr()[0]
+                print(f"Epoch {epoch:3d}: Loss = {avg_train_loss:.4f}, LR = {lr:.6f}")
         
         scheduler.step()
-        
-        # Save best model based on validation loss
-        if avg_val_loss < best_val_loss:
-            best_val_loss = avg_val_loss
-            best_train_loss = avg_train_loss
-            torch.save(model.state_dict(), "sokoban_diffusion.pth")
-        
-        # Print progress
-        if epoch % 50 == 0 or epoch < 10:
-            lr = scheduler.get_last_lr()[0]
-            print(f"Epoch {epoch:3d}: Train = {avg_train_loss:.4f}, Val = {avg_val_loss:.4f}, LR = {lr:.6f}")
     
     print("-" * 50)
     print(f"✅ Training complete!")
     print(f"📊 Best train loss: {best_train_loss:.4f}")
-    print(f"📊 Best val loss: {best_val_loss:.4f}")
-    print(f"💾 Model saved to 'sokoban_diffusion.pth'")
+    if use_validation:
+        print(f"📊 Best val loss: {best_val_loss:.4f}")
+    print(f"💾 Model saved to '{model_path}'")
 
 
 if __name__ == "__main__":

@@ -111,9 +111,30 @@ If you want to quickly test deployment:
 2. Open it in browser to test
 3. Monitor logs in Railway dashboard
 
+## Training Configuration
+
+By default, Railway uses **200 epochs** for faster deployment. You can customize this:
+
+**Option 1: Via Railway Dashboard (Environment Variables)**
+- Go to your Railway project → Variables tab
+- Add `TRAIN_EPOCHS=500` for full training (better quality, slower)
+- Add `TRAIN_USE_VALIDATION=true` to enable validation split
+
+**Option 2: Via Railway CLI**
+```bash
+railway variables set TRAIN_EPOCHS=500
+railway variables set TRAIN_USE_VALIDATION=true
+```
+
+**Trade-offs:**
+- **200 epochs**: ~10-20 min, working model, faster deployment
+- **500 epochs**: ~30-60 min, better quality, slower first deployment
+- **Validation**: Adds ~20% time but helps detect overfitting
+
 ## Cost
 
 - Railway free tier: $5/month credit
 - This app should fit within free tier limits
 - Monitor usage in Railway dashboard
+- Training time counts toward compute usage
 
