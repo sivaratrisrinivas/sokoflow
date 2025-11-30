@@ -21,18 +21,19 @@ CORS(app)
 # Helper to ensure all values are Python native types
 def make_json_safe(obj):
     """Recursively convert numpy types to Python native types."""
+    # Handle dictionaries
     if isinstance(obj, dict):
         return {k: make_json_safe(v) for k, v in obj.items()}
+    # Handle lists/tuples
     elif isinstance(obj, (list, tuple)):
         return [make_json_safe(item) for item in obj]
-    elif isinstance(obj, np.integer):
-        return int(obj)
-    elif isinstance(obj, np.floating):
-        return float(obj)
-    elif isinstance(obj, np.bool_):
-        return bool(obj)
+    # Handle numpy arrays
     elif isinstance(obj, np.ndarray):
         return make_json_safe(obj.tolist())
+    # Handle numpy scalars (bool_, int64, float32, etc) - np.generic is base class for all
+    elif isinstance(obj, np.generic):
+        return obj.item()
+    # Handle python types explicitly if needed, otherwise return as is
     return obj
 
 ACTION_MAP = {0: 'UP', 1: 'DOWN', 2: 'LEFT', 3: 'RIGHT'}
