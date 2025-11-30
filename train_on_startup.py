@@ -62,6 +62,12 @@ def train_if_needed():
         return False
 
 if __name__ == "__main__":
+    print("🚀 train_on_startup.py: Starting...")
     success = train_if_needed()
-    sys.exit(0 if success else 1)
+    if success:
+        print("✅ train_on_startup.py: Completed successfully")
+    else:
+        print("⚠️ train_on_startup.py: Completed with warnings (app will still start)")
+    # Don't exit with error code - let app start regardless
+    sys.exit(0)
 

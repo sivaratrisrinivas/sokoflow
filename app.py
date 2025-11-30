@@ -10,12 +10,30 @@ from flask_cors import CORS
 import torch
 import numpy as np
 import os
+import json
 
 from sokoban_engine import SokobanEnv
 from sokoban_diffusion import SokobanDiffusion, state_to_tensor
 
 app = Flask(__name__)
 CORS(app)
+
+# Helper to ensure all values are Python native types
+def make_json_safe(obj):
+    """Recursively convert numpy types to Python native types."""
+    if isinstance(obj, dict):
+        return {k: make_json_safe(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [make_json_safe(item) for item in obj]
+    elif isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    elif isinstance(obj, np.ndarray):
+        return make_json_safe(obj.tolist())
+    return obj
 
 ACTION_MAP = {0: 'UP', 1: 'DOWN', 2: 'LEFT', 3: 'RIGHT'}
 ACTION_DELTAS = {'UP': (-1,0), 'DOWN': (1,0), 'LEFT': (0,-1), 'RIGHT': (0,1)}
@@ -192,47 +210,52 @@ def new_game():
         # Try easier puzzle
         difficulty = max(8, difficulty - 4)
     
-    return jsonify({
-        'grid': env.grid.tolist(),
-        'targets': env.targets.astype(int).tolist(),  # Convert bool array to int for JSON
+    response = {
+        'grid': env.grid.astype(int).tolist(),
+        'targets': env.targets.astype(int).tolist(),
         'solvable': bool(solution_path is not None),
         'moves': int(len(solution_path) if solution_path else 0)
-    })
+    }
+    return jsonify(make_json_safe(response))
 
 @app.route('/api/solve_step', methods=['POST'])
 def solve_step():
     global solution_index
     
     if not solution_path:
-        return jsonify({
+        response = {
             'action': 'GIVE_UP',
-            'grid': env.grid.tolist(),
+            'grid': env.grid.astype(int).tolist(),
             'solved': False,
             'gave_up': True,
             'steps': 0,
             'message': 'Diffusion failed'
-        })
+        }
+        return jsonify(make_json_safe(response))
     
     if solution_index >= len(solution_path):
-        return jsonify({
+        response = {
             'action': 'DONE',
-            'grid': env.grid.tolist(),
-            'solved': is_solved(env.grid),
+            'grid': env.grid.astype(int).tolist(),
+            'solved': bool(is_solved(env.grid)),
             'steps': int(solution_index),
             'total': int(len(solution_path))
-        })
+        }
+        return jsonify(make_json_safe(response))
     
     action = solution_path[solution_index]
     solution_index += 1
     env.step(action)
     
-    return jsonify({
-        'action': action,
-        'grid': env.grid.tolist(),
-        'solved': is_solved(env.grid),
+    # Prepare response with all Python native types
+    response = {
+        'action': str(action),
+        'grid': env.grid.astype(int).tolist(),
+        'solved': bool(is_solved(env.grid)),
         'steps': int(solution_index),
         'total': int(len(solution_path))
-    })
+    }
+    return jsonify(make_json_safe(response))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
