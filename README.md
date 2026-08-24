@@ -25,6 +25,8 @@ GS-T5 measurement of SokobanDiffusion versus BFS on reverse-scrambled 8x8 boards
 | hard (4 boxes) | 100 | 93.0% (93/100) | 15.0% (15/100) | 16.1% (15/93) |
 | overall | 240 | 95.4% (229/240) | 20.8% (50/240) | 21.8% (50/229) |
 
+The published diffusion solve rate is 20.8% (50/240). That figure is not re-filtered. Many of those wins are 1-box-off short trajectories: 111/240 puzzles have `boxes_off_target=1`, and 43 of 50 diffusion successes are those boards. Mean BFS length of diffusion solves is 3.7. Training `generate_dataset` drops trajectories shorter than 5, so this is not a scramble-hard rate.
+
 BFS failed on 11 of 240 puzzles (max_nodes=30000). Diffusion failed on 190 of 240 puzzles. Full per-puzzle outcomes are in `eval/gs_t5_solve_rate.json`.
 
 Reproduce:
@@ -86,7 +88,6 @@ Then open http://localhost:5000
 ## Performance
 
 - **Speed**: ~10-20 denoising steps per puzzle
-- **Success Rate**: ~90%+ on puzzles with 2-3 boxes
 - **Max Iterations**: 20 iterations for hard puzzles
 
 ## Requirements
