@@ -14,6 +14,27 @@ Random Actions → [Denoising Process] → Optimal Solution
 
 The model learns to turn random moves into optimal solutions, similar to how image generators turn noise into pictures.
 
+## Results
+
+GS-T5 measurement of SokobanDiffusion versus BFS on reverse-scrambled 8x8 boards. Date: 2026-08-24. Model: SokobanDiffusion (`sokoban_diffusion.pth`). Dataset: 240 puzzles (20 per box-count and scramble config from `sokoban_data_gen.py`). Hardware: Intel Xeon, 4 cores, 16 GB RAM, CPU, Python 3.12.3, PyTorch 2.13.0.
+
+| Difficulty | N | BFS | Diffusion | Diffusion given BFS |
+|---|---:|---|---|---|
+| easy (2 boxes) | 60 | 100.0% (60/60) | 33.3% (20/60) | 33.3% (20/60) |
+| medium (3 boxes) | 80 | 95.0% (76/80) | 18.8% (15/80) | 19.7% (15/76) |
+| hard (4 boxes) | 100 | 93.0% (93/100) | 15.0% (15/100) | 16.1% (15/93) |
+| overall | 240 | 95.4% (229/240) | 20.8% (50/240) | 21.8% (50/229) |
+
+The published diffusion solve rate is 20.8% (50/240). That figure is not re-filtered. Many of those wins are 1-box-off short trajectories: 111/240 puzzles have `boxes_off_target=1`, and 43 of 50 diffusion successes are those boards. Mean BFS length of diffusion solves is 3.7. Training `generate_dataset` drops trajectories shorter than 5, so this is not a scramble-hard rate.
+
+BFS failed on 11 of 240 puzzles (max_nodes=30000). Diffusion failed on 190 of 240 puzzles. Full per-puzzle outcomes are in `eval/gs_t5_solve_rate.json`.
+
+Reproduce:
+
+```bash
+python eval/measure_solve_rate.py
+```
+
 ## Quick Start
 
 ```bash
@@ -67,7 +88,6 @@ Then open http://localhost:5000
 ## Performance
 
 - **Speed**: ~10-20 denoising steps per puzzle
-- **Success Rate**: ~90%+ on puzzles with 2-3 boxes
 - **Max Iterations**: 20 iterations for hard puzzles
 
 ## Requirements
