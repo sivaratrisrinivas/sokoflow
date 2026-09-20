@@ -11,7 +11,9 @@ From the repo root:
 
     python eval/measure_solve_rate.py
 
-Writes eval/gs_t5_solve_rate.json and prints a markdown table to stdout.
+Prints a markdown table. Writes eval/gs_t5_solve_rate-YYYY-MM-DD.json by
+default so the historical 2026-08-24 file eval/gs_t5_solve_rate.json is
+not overwritten. Pass --force to replace that historical file.
 """
 
 from __future__ import annotations
@@ -358,7 +360,29 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--n-per-config", type=int, default=None)
     parser.add_argument("--max-configs", type=int, default=None)
     parser.add_argument("--output", type=Path, default=None)
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite the historical eval/gs_t5_solve_rate.json (2026-08-24).",
+    )
     return parser.parse_args(argv)
+
+
+def dated_output_path(date: str) -> Path:
+    return ROOT / "eval" / f"gs_t5_solve_rate-{date}.json"
+
+
+def resolve_output_path(args: argparse.Namespace, results: dict) -> Path:
+    """Never clobber the historical GS-T5 JSON unless --force is set."""
+    if args.smoke:
+        return args.output or (ROOT / "eval" / "smoke_solve_rate.json")
+    requested = args.output
+    if requested is None:
+        requested = OUTPUT_PATH if args.force else dated_output_path(results["date"])
+    requested = Path(requested)
+    if requested.resolve() == OUTPUT_PATH.resolve() and not args.force:
+        return dated_output_path(results["date"])
+    return requested
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -377,16 +401,15 @@ def main(argv: list[str] | None = None) -> None:
     print(table)
     print()
 
-    if args.smoke:
-        smoke_path = args.output or (ROOT / "eval" / "smoke_solve_rate.json")
-        smoke_path.parent.mkdir(parents=True, exist_ok=True)
-        smoke_path.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
-        print(f"Smoke write {smoke_path} (historical GS-T5 table left unchanged).")
-        return
-
-    out = args.output or OUTPUT_PATH
+    out = resolve_output_path(args, results)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+    if args.smoke:
+        print(f"Smoke write {out} (historical GS-T5 table left unchanged).")
+        return
+    if out.resolve() != OUTPUT_PATH.resolve():
+        print(f"Wrote {out} (historical {OUTPUT_PATH.name} left unchanged; pass --force to replace it).")
+        return
     print(f"Wrote {out}")
 
 

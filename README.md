@@ -32,6 +32,12 @@ pip install -r requirements.txt
 python app.py
 ```
 
+`requirements.txt` already uses the CPU torch extra index (`torch==2.5.1+cpu`). Editable installs of `pyproject.toml` need the same index:
+
+```bash
+pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cpu
+```
+
 Open http://localhost:5000. First `/api/new_game` loads PyTorch + 3.7MB weights; cold start can take tens of seconds on a tiny dyno.
 
 ### Docker
@@ -52,11 +58,12 @@ Weights `sokoban_diffusion.pth` are already in git. You do **not** need to train
 ```bash
 python sokoban_data_gen.py          # writes sokoban_dataset.npy (untracked)
 python sokoban_diffusion.py         # overwrites sokoban_diffusion.pth
-python eval/measure_solve_rate.py   # full GS-T5, 240 puzzles; writes eval/gs_t5_solve_rate.json
+python eval/measure_solve_rate.py   # full GS-T5; writes dated JSON; does not overwrite the 2026-08-24 file
+python eval/measure_solve_rate.py --force   # replace eval/gs_t5_solve_rate.json
 python eval/measure_solve_rate.py --smoke   # 1 puzzle, does not overwrite the GS-T5 table
 ```
 
-Reproduce the published table with the one-liner `python eval/measure_solve_rate.py`. That run will take on the order of a minute on a 4-core CPU (historical elapsed: 57.5s).
+Reproduce with `python eval/measure_solve_rate.py` (one command). That writes `eval/gs_t5_solve_rate-YYYY-MM-DD.json` and leaves the historical table in `eval/gs_t5_solve_rate.json`. A full run takes on the order of a minute on a 4-core CPU (historical elapsed: 57.5s).
 
 ## Results (historical GS-T5)
 
@@ -93,7 +100,7 @@ No new training run was done for the production packaging work. If a later commi
 | POST | `/api/solve` | Stateless solve. Body `{grid, targets}` 8×8 |
 | POST | `/api/solve_step` | Playback using `sokoflow_sid` cookie |
 
-Guards: `MAX_CONTENT_LENGTH` default 16KiB; `RATE_LIMIT_PER_MINUTE` default 30 on `/api/solve`; `NEW_GAME_RATE_LIMIT_PER_MINUTE` default 120 on the demo generate/playback routes; `CORS_ORIGINS` default `*`.
+Guards: `MAX_CONTENT_LENGTH` default 16KiB; `RATE_LIMIT_PER_MINUTE` default 30 on `/api/solve`; `NEW_GAME_RATE_LIMIT_PER_MINUTE` default 120 on `/api/new_game` and `/api/solve_step` (separate per-IP buckets); `TRUST_PROXY` default unset (rate-limit key is `request.remote_addr`; `X-Forwarded-For` is ignored unless `TRUST_PROXY=1`); `CORS_ORIGINS` default `*`.
 
 ## Layout
 
@@ -108,8 +115,8 @@ Guards: `MAX_CONTENT_LENGTH` default 16KiB; `RATE_LIMIT_PER_MINUTE` default 30 o
 | `tests/` | Engine, actions, weight load, eval smoke, API guards |
 | `Dockerfile` / `docker-compose.yml` | One-command UI |
 
-Install as a package with `pip install -e ".[dev]"` (`pyproject.toml`).
+Install as a package with `pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cpu` (`pyproject.toml` pins `torch==2.5.1+cpu`). `pip install -r requirements.txt` already includes that index.
 
 ## Deploy
 
-See [DEPLOY.md](DEPLOY.md). Persistent Docker/Railway/Render/HF Spaces is the realistic host. Vercel Hobby was tried twice: CUDA torch **5306 MB**, CPU torch **731 MB**, both over the **500 MB** function cap. Do not set the GitHub homepage to a Vercel URL.
+See [DEPLOY.md](DEPLOY.md). Persistent Docker/Railway/Render/HF Spaces is the realistic host. Vercel Hobby cannot ship this app (measured CUDA torch **5306 MB**, CPU torch **731 MB**, both over the **500 MB** function cap). There is no `vercel.json`. Do not set the GitHub homepage to a Vercel URL.

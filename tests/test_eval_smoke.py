@@ -1,7 +1,14 @@
 import json
 from pathlib import Path
 
-from eval.measure_solve_rate import CONFIGS, run
+from eval.measure_solve_rate import (
+    CONFIGS,
+    OUTPUT_PATH,
+    dated_output_path,
+    parse_args,
+    resolve_output_path,
+    run,
+)
 
 GS_T5 = Path(__file__).resolve().parent.parent / "eval" / "gs_t5_solve_rate.json"
 
@@ -26,6 +33,25 @@ def test_eval_smoke_one_easy_puzzle():
     assert "diffusion_solved" in puzzle
     assert "bfs_solved" in puzzle
     assert results["by_difficulty"]["overall"]["n"] == 1
-    # Smoke must not clobber the published GS-T5 file.
     published = json.loads(GS_T5.read_text(encoding="utf-8"))
     assert published["date"] == "2026-08-24"
+
+
+def test_non_smoke_default_write_is_dated_not_historical():
+    args = parse_args([])
+    out = resolve_output_path(args, {"date": "2026-09-20"})
+    assert out == dated_output_path("2026-09-20")
+    assert out.resolve() != OUTPUT_PATH.resolve()
+    assert out.name == "gs_t5_solve_rate-2026-09-20.json"
+
+
+def test_force_writes_historical_path():
+    args = parse_args(["--force"])
+    out = resolve_output_path(args, {"date": "2026-09-20"})
+    assert out.resolve() == OUTPUT_PATH.resolve()
+
+
+def test_explicit_historical_output_still_requires_force():
+    args = parse_args(["--output", str(OUTPUT_PATH)])
+    out = resolve_output_path(args, {"date": "2026-09-20"})
+    assert out == dated_output_path("2026-09-20")

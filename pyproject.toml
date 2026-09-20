@@ -16,6 +16,8 @@ dependencies = [
     "numpy>=1.24.0,<3",
     "torch==2.5.1+cpu",
 ]
+# Editable installs need the CPU torch extra index (same pin as requirements.txt):
+#   pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cpu
 
 [project.optional-dependencies]
 dev = [

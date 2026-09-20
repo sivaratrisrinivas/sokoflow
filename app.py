@@ -207,19 +207,29 @@ def diffusion_solve_fast(grid, targets, max_iters=20):
     return solution if is_solved(current_grid) else None
 
 
+def _trust_proxy() -> bool:
+    return os.environ.get("TRUST_PROXY", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _client_key() -> str:
-    forwarded = request.headers.get("X-Forwarded-For", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    """Rate-limit identity. Ignore X-Forwarded-For unless TRUST_PROXY is set."""
+    if _trust_proxy():
+        forwarded = request.headers.get("X-Forwarded-For", "")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
     return request.remote_addr or "unknown"
 
 
-def rate_limit_ok(limit: int | None = None) -> bool:
-    max_hits = limit if limit is not None else int(os.environ.get("RATE_LIMIT_PER_MINUTE", str(DEFAULT_RATE_LIMIT)))
+def rate_limit_ok(*, group: str, limit: int | None = None) -> bool:
+    """Per-IP buckets are split by route group (solve vs demo) so caps do not share hits."""
+    if limit is None:
+        max_hits = int(os.environ.get("RATE_LIMIT_PER_MINUTE", str(DEFAULT_RATE_LIMIT)))
+    else:
+        max_hits = limit
     if max_hits <= 0:
         return True
     now = time.time()
-    key = _client_key()
+    key = f"{group}:{_client_key()}"
     with _rate_lock:
         bucket = _rate_hits[key]
         while bucket and now - bucket[0] > 60:
@@ -327,7 +337,7 @@ def _parse_board(data):
 
 @app.route("/api/solve", methods=["POST"])
 def api_solve():
-    if not rate_limit_ok():
+    if not rate_limit_ok(group="solve"):
         return _json({"error": "rate_limited"}, 429)
     data = request.get_json(silent=True) or {}
     try:
@@ -352,7 +362,10 @@ def api_solve():
 
 @app.route("/api/new_game", methods=["POST"])
 def new_game():
-    if not rate_limit_ok(int(os.environ.get("NEW_GAME_RATE_LIMIT_PER_MINUTE", str(DEFAULT_NEW_GAME_RATE_LIMIT)))):
+    if not rate_limit_ok(
+        group="demo",
+        limit=int(os.environ.get("NEW_GAME_RATE_LIMIT_PER_MINUTE", str(DEFAULT_NEW_GAME_RATE_LIMIT))),
+    ):
         return _json({"error": "rate_limited"}, 429)
 
     data = request.get_json(silent=True) or {}
@@ -389,7 +402,10 @@ def new_game():
 
 @app.route("/api/solve_step", methods=["POST"])
 def solve_step():
-    if not rate_limit_ok(int(os.environ.get("NEW_GAME_RATE_LIMIT_PER_MINUTE", str(DEFAULT_NEW_GAME_RATE_LIMIT)))):
+    if not rate_limit_ok(
+        group="demo",
+        limit=int(os.environ.get("NEW_GAME_RATE_LIMIT_PER_MINUTE", str(DEFAULT_NEW_GAME_RATE_LIMIT))),
+    ):
         return _json({"error": "rate_limited"}, 429)
 
     sid, sess = _get_session()

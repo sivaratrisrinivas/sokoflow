@@ -1,8 +1,8 @@
 # Deploy SokoFlow
 
-SokoFlow is a Flask + PyTorch CPU app with a 3.7MB weight file. A **persistent process** (Docker, Railway, Render, Fly, HF Spaces Docker) is the reliable demo. Serverless Flask on Vercel is included as a best-effort option; expect a long cold start while `torch` imports.
+SokoFlow is a Flask + PyTorch CPU app with a 3.7MB weight file. A **persistent process** (Docker, Railway, Render, Fly, HF Spaces Docker) is the reliable demo.
 
-`GET /health` is the probe. First `/api/new_game` after a cold boot can take tens of seconds.
+`GET /health` is the probe and must return `"model_loaded": true` (the Docker HEALTHCHECK asserts that, not merely HTTP 200). First `/api/new_game` after a cold boot can take tens of seconds.
 
 ## Docker (local or any VM)
 
@@ -49,16 +49,16 @@ Set `min_machines_running = 0` if you accept cold starts; keep 1 worker equivale
 3. HF sets `PORT=7860`; the image honors `$PORT`.
 4. Space URL is the live demo.
 
-## Vercel (not a live demo on this Hobby account)
+## Vercel (unsupported)
 
-A Flask project was linked (`sokoflow` on team Srini, Deployment Protection off). Measured bundle sizes:
+Hobby cannot ship torch for this app. Measured bundle sizes:
 
 | Attempt | Torch source | Bundle | Hobby cap |
 |---|---|---:|---:|
 | CUDA default from pyproject `torch>=2` | PyPI | **5306.44 MB** | 500 MB |
 | `torch==2.5.1+cpu` via uv CPU index | download.pytorch.org/whl/cpu | **731.17 MB** | 500 MB |
 
-Both failed `LAMBDA_SIZE_EXCEEDED`. This account’s function cap is 500 MB (not the 5 GB Fluid figure). **Do not publish a Vercel URL.** Use Docker / Railway / Render / HF Spaces Docker.
+Both failed `LAMBDA_SIZE_EXCEEDED`. There is no `vercel.json`. **Do not publish a Vercel URL.** Use Docker / Railway / Render / HF Spaces Docker.
 
 ## Env vars
 
@@ -68,7 +68,8 @@ Both failed `LAMBDA_SIZE_EXCEEDED`. This account’s function cap is 500 MB (not
 | `SOKOFLOW_MODEL_PATH` | `sokoban_diffusion.pth` | Weights |
 | `CORS_ORIGINS` | `*` | Comma-separated origins |
 | `RATE_LIMIT_PER_MINUTE` | `30` | `/api/solve` cap per client IP |
-| `NEW_GAME_RATE_LIMIT_PER_MINUTE` | `120` | Demo `/api/new_game` + `/api/solve_step` |
+| `NEW_GAME_RATE_LIMIT_PER_MINUTE` | `120` | Demo `/api/new_game` + `/api/solve_step` (separate bucket from `/api/solve`) |
+| `TRUST_PROXY` | unset | If `1`/`true`, rate-limit keys use `X-Forwarded-For`; default is `request.remote_addr` only |
 | `MAX_CONTENT_LENGTH` | `16384` | Request body cap (bytes) |
 
 ## GitHub homepage

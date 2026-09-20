@@ -1,5 +1,3 @@
-import os
-
 import numpy as np
 import pytest
 
@@ -13,6 +11,23 @@ def client():
     _sessions.clear()
     with app.test_client() as test_client:
         yield test_client
+
+
+def _board():
+    board = {
+        "grid": np.zeros((8, 8), dtype=int).tolist(),
+        "targets": np.zeros((8, 8), dtype=bool).tolist(),
+    }
+    board["grid"][0] = [1] * 8
+    board["grid"][7] = [1] * 8
+    for row in board["grid"]:
+        row[0] = 1
+        row[7] = 1
+    board["grid"][3][2] = 2
+    board["grid"][3][3] = 3
+    board["targets"][3][4] = True
+    board["grid"][3][4] = 4
+    return board
 
 
 def test_health_reports_model(client):
@@ -55,20 +70,7 @@ def test_solve_requires_8x8_board(client):
 def test_rate_limit_on_solve(client, monkeypatch):
     monkeypatch.setenv("RATE_LIMIT_PER_MINUTE", "2")
     monkeypatch.setattr("app.diffusion_solve_fast", lambda *args, **kwargs: ["RIGHT"])
-    board = {
-        "grid": np.zeros((8, 8), dtype=int).tolist(),
-        "targets": np.zeros((8, 8), dtype=bool).tolist(),
-    }
-    board["grid"][0] = [1] * 8
-    board["grid"][7] = [1] * 8
-    for row in board["grid"]:
-        row[0] = 1
-        row[7] = 1
-    board["grid"][3][2] = 2
-    board["grid"][3][3] = 3
-    board["targets"][3][4] = True
-    board["grid"][3][4] = 4
-
+    board = _board()
     first = client.post("/api/solve", json=board)
     second = client.post("/api/solve", json=board)
     third = client.post("/api/solve", json=board)
@@ -76,6 +78,40 @@ def test_rate_limit_on_solve(client, monkeypatch):
     assert second.status_code == 200
     assert third.status_code == 429
     assert third.get_json()["error"] == "rate_limited"
+
+
+def test_solve_and_new_game_use_separate_buckets(client, monkeypatch):
+    monkeypatch.setenv("RATE_LIMIT_PER_MINUTE", "1")
+    monkeypatch.setenv("NEW_GAME_RATE_LIMIT_PER_MINUTE", "5")
+    monkeypatch.setattr("app.diffusion_solve_fast", lambda *args, **kwargs: ["RIGHT"])
+    board = _board()
+    assert client.post("/api/solve", json=board).status_code == 200
+    assert client.post("/api/solve", json=board).status_code == 429
+    demo = client.post("/api/new_game", json={"difficulty": 8})
+    assert demo.status_code == 200
+    assert demo.get_json()["solvable"] is True
+
+
+def test_rate_limit_ignores_x_forwarded_for_without_trust_proxy(client, monkeypatch):
+    monkeypatch.delenv("TRUST_PROXY", raising=False)
+    monkeypatch.setenv("RATE_LIMIT_PER_MINUTE", "1")
+    monkeypatch.setattr("app.diffusion_solve_fast", lambda *args, **kwargs: ["RIGHT"])
+    board = _board()
+    first = client.post("/api/solve", json=board, headers={"X-Forwarded-For": "1.1.1.1"})
+    second = client.post("/api/solve", json=board, headers={"X-Forwarded-For": "8.8.8.8"})
+    assert first.status_code == 200
+    assert second.status_code == 429
+
+
+def test_rate_limit_uses_x_forwarded_for_when_trust_proxy_set(client, monkeypatch):
+    monkeypatch.setenv("TRUST_PROXY", "1")
+    monkeypatch.setenv("RATE_LIMIT_PER_MINUTE", "1")
+    monkeypatch.setattr("app.diffusion_solve_fast", lambda *args, **kwargs: ["RIGHT"])
+    board = _board()
+    first = client.post("/api/solve", json=board, headers={"X-Forwarded-For": "1.1.1.1"})
+    second = client.post("/api/solve", json=board, headers={"X-Forwarded-For": "8.8.8.8"})
+    assert first.status_code == 200
+    assert second.status_code == 200
 
 
 def test_is_solved_and_valid_move_helpers():
