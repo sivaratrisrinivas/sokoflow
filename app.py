@@ -25,6 +25,7 @@ APP_VERSION = "0.1.0"
 DEFAULT_MODEL_PATH = os.environ.get("SOKOFLOW_MODEL_PATH", "sokoban_diffusion.pth")
 MAX_CONTENT_BYTES = int(os.environ.get("MAX_CONTENT_LENGTH", str(16 * 1024)))
 DEFAULT_RATE_LIMIT = int(os.environ.get("RATE_LIMIT_PER_MINUTE", "30"))
+DEFAULT_NEW_GAME_RATE_LIMIT = int(os.environ.get("NEW_GAME_RATE_LIMIT_PER_MINUTE", "120"))
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_BYTES
@@ -351,7 +352,7 @@ def api_solve():
 
 @app.route("/api/new_game", methods=["POST"])
 def new_game():
-    if not rate_limit_ok():
+    if not rate_limit_ok(int(os.environ.get("NEW_GAME_RATE_LIMIT_PER_MINUTE", str(DEFAULT_NEW_GAME_RATE_LIMIT)))):
         return _json({"error": "rate_limited"}, 429)
 
     data = request.get_json(silent=True) or {}
@@ -388,7 +389,7 @@ def new_game():
 
 @app.route("/api/solve_step", methods=["POST"])
 def solve_step():
-    if not rate_limit_ok():
+    if not rate_limit_ok(int(os.environ.get("NEW_GAME_RATE_LIMIT_PER_MINUTE", str(DEFAULT_NEW_GAME_RATE_LIMIT)))):
         return _json({"error": "rate_limited"}, 429)
 
     sid, sess = _get_session()

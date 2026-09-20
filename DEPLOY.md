@@ -49,19 +49,11 @@ Set `min_machines_running = 0` if you accept cold starts; keep 1 worker equivale
 3. HF sets `PORT=7860`; the image honors `$PORT`.
 4. Space URL is the live demo.
 
-## Vercel (Flask, best-effort)
+## Vercel (not a live demo on this Hobby account)
 
-Vercel natively supports Flask (`vercel.json` framework `flask`, `app.py` maxDuration 300). PyTorch makes the bundle large and cold start slow. Hobby plans may OOM.
+Vercel Flask is configured (`vercel.json`, project `sokoflow` on team Srini, Deployment Protection off). The first production deploy **failed** with `LAMBDA_SIZE_EXCEEDED`: default PyPI torch bundled to **5306 MB** vs a **500 MB** function cap.
 
-If it builds:
-
-```bash
-npx vercel --yes --prod
-```
-
-Or connect the GitHub repo in the Vercel dashboard as framework **Flask**.
-
-Disable Deployment Protection so `/health` and the UI are public. If the dashboard requires auth, set the GitHub homepage only after that is off.
+`requirements.txt` now pins `torch==2.5.1+cpu`. If a later build still exceeds 500 MB, use Docker / Railway / Render / HF Spaces. Do not publish a Vercel URL unless `/health` returns `"model_loaded": true` without auth.
 
 ## Env vars
 
@@ -70,7 +62,8 @@ Disable Deployment Protection so `/health` and the UI are public. If the dashboa
 | `PORT` | `5000` | Bind port |
 | `SOKOFLOW_MODEL_PATH` | `sokoban_diffusion.pth` | Weights |
 | `CORS_ORIGINS` | `*` | Comma-separated origins |
-| `RATE_LIMIT_PER_MINUTE` | `30` | Solve/new_game cap per client IP |
+| `RATE_LIMIT_PER_MINUTE` | `30` | `/api/solve` cap per client IP |
+| `NEW_GAME_RATE_LIMIT_PER_MINUTE` | `120` | Demo `/api/new_game` + `/api/solve_step` |
 | `MAX_CONTENT_LENGTH` | `16384` | Request body cap (bytes) |
 
 ## GitHub homepage

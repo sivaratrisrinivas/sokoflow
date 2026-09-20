@@ -93,7 +93,7 @@ No new training run was done for the production packaging work. If a later commi
 | POST | `/api/solve` | Stateless solve. Body `{grid, targets}` 8×8 |
 | POST | `/api/solve_step` | Playback using `sokoflow_sid` cookie |
 
-Guards: `MAX_CONTENT_LENGTH` default 16KiB; `RATE_LIMIT_PER_MINUTE` default 30; `CORS_ORIGINS` default `*`.
+Guards: `MAX_CONTENT_LENGTH` default 16KiB; `RATE_LIMIT_PER_MINUTE` default 30 on `/api/solve`; `NEW_GAME_RATE_LIMIT_PER_MINUTE` default 120 on the demo generate/playback routes; `CORS_ORIGINS` default `*`.
 
 ## Layout
 
@@ -112,6 +112,4 @@ Install as a package with `pip install -e ".[dev]"` (`pyproject.toml`).
 
 ## Deploy
 
-See [DEPLOY.md](DEPLOY.md) for Railway, Render, Fly.io, Hugging Face Spaces, Vercel, and Docker. Persistent Docker/Railway/Render is the realistic host: Flask + PyTorch wants a single long-lived process.
-
-After a public URL exists, set the GitHub repo homepage to that URL (needs maintainer access).
+See [DEPLOY.md](DEPLOY.md). Persistent Docker/Railway/Render/HF Spaces is the realistic host. A Vercel Flask project was linked and **failed** on this Hobby account (`LAMBDA_SIZE_EXCEEDED` 5306 MB vs 500 MB). Do not set the GitHub homepage to a Vercel URL unless `/health` is actually public and healthy.

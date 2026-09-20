@@ -264,7 +264,10 @@
             while (running) {
                 setStatus('Computing...', 'solving');
                 const ok = await newGame();
-                if (!ok) continue;
+                if (!ok) {
+                    await sleep(400);
+                    continue;
+                }
                 
                 setStatus('Solving...', 'solving');
                 
