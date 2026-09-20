@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sokoflow"
+version = "0.1.0"
+description = "CPU diffusion model that generates Sokoban action sequences on 8x8 boards."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Srinivas" }]
+dependencies = [
+    "flask>=2.3.0,<4",
+    "flask-cors>=4.0.0,<7",
+    "gunicorn>=22.0.0,<26",
+    "numpy>=1.24.0,<3",
+    "torch==2.5.1+cpu",
+]
+# Editable installs need the CPU torch extra index (same pin as requirements.txt):
+#   pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cpu
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/sivaratrisrinivas/sokoflow"
+Repository = "https://github.com/sivaratrisrinivas/sokoflow"
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[tool.setuptools]
+py-modules = [
+    "app",
+    "sokoban_engine",
+    "sokoban_diffusion",
+    "sokoban_data_gen",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

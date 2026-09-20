@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: unit-and-smoke-cpu
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SOKOFLOW_MODEL_PATH: sokoban_diffusion.pth
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install CPU dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest==8.3.5
+
+      - name: Unit tests
+        run: pytest -q
+
+      - name: Smoke import model and tiny eval
+        run: |
+          python -c "from sokoban_diffusion import SokobanDiffusion; import torch, os; m=SokobanDiffusion(); m.load_state_dict(torch.load(os.environ['SOKOFLOW_MODEL_PATH'], map_location='cpu', weights_only=True)); print('model_ok', sum(p.numel() for p in m.parameters()))"
+          python eval/measure_solve_rate.py --smoke
