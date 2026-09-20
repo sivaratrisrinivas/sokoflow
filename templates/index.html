@@ -28,6 +28,7 @@
             align-items: center;
             justify-content: center;
             gap: 20px;
+            padding: 16px;
         }
 
         /* Grid */
@@ -121,6 +122,25 @@
         }
 
         .stats span { color: var(--text); }
+
+        .honest {
+            max-width: 420px;
+            text-align: center;
+            font-size: 10px;
+            line-height: 1.5;
+            letter-spacing: 0.04em;
+            color: var(--dim);
+        }
+
+        @media (max-width: 520px) {
+            #grid {
+                grid-template-columns: repeat(8, 36px);
+                grid-template-rows: repeat(8, 36px);
+            }
+            .cell { width: 36px; height: 36px; }
+            .box { width: 24px; height: 24px; }
+            .player { width: 22px; height: 22px; }
+        }
     </style>
 </head>
 <body>
@@ -135,38 +155,109 @@
         Solved <span id="solved">0</span> · Moves <span id="moves">0</span>
     </div>
 
+    <p class="honest">
+        CPU demo. GS-T5 (2026-08-24): diffusion 20.8% (50/240) vs BFS 95.4% (229/240).
+        Not scramble-hard — 43/50 wins are 1-box-off short trajectories. First request may be a cold start.
+    </p>
+
     <script>
         let running = false;
         let solved = 0;
         let moves = 0;
+        let localGrid = null;
+        let localTargets = null;
+        let localPath = [];
+        let localIndex = 0;
+        const DELTAS = {UP: [-1, 0], DOWN: [1, 0], LEFT: [0, -1], RIGHT: [0, 1]};
+
+        function applyMove(grid, targets, action) {
+            const [dr, dc] = DELTAS[action];
+            let pr = -1, pc = -1;
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (grid[r][c] === 2) { pr = r; pc = c; }
+                }
+            }
+            if (pr < 0) return null;
+            const nr = pr + dr, nc = pc + dc;
+            if (nr < 0 || nr > 7 || nc < 0 || nc > 7) return null;
+            const next = grid.map(row => row.slice());
+            const cell = next[nr][nc];
+            if (cell === 1) return null;
+            if (cell === 0 || cell === 4) {
+                next[pr][pc] = targets[pr][pc] ? 4 : 0;
+                next[nr][nc] = 2;
+                return next;
+            }
+            if (cell === 3 || cell === 5) {
+                const nnr = nr + dr, nnc = nc + dc;
+                if (nnr < 0 || nnr > 7 || nnc < 0 || nnc > 7) return null;
+                if (next[nnr][nnc] !== 0 && next[nnr][nnc] !== 4) return null;
+                next[pr][pc] = targets[pr][pc] ? 4 : 0;
+                next[nr][nc] = 2;
+                next[nnr][nnc] = targets[nnr][nnc] ? 5 : 3;
+                return next;
+            }
+            return null;
+        }
+
+        function gridSolved(grid) {
+            return grid.every(row => row.every(v => v !== 3));
+        }
 
         async function newGame() {
+            setStatus('Computing (cold start possible)...', 'solving');
             const res = await fetch('/api/new_game', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ difficulty: 25 })
             });
+            if (res.status === 429) {
+                setStatus('Rate limited', '');
+                await sleep(1200);
+                return false;
+            }
             const data = await res.json();
+            localGrid = data.grid;
+            localTargets = data.targets;
+            localPath = data.path || [];
+            localIndex = 0;
             render(data.grid);
-            return data.solvable;
+            return Boolean(data.solvable && localPath.length);
         }
 
         async function step() {
+            if (localPath.length) {
+                if (localIndex >= localPath.length) {
+                    return gridSolved(localGrid) ? finishSolved(localPath.length) : 'failed';
+                }
+                const action = localPath[localIndex];
+                const next = applyMove(localGrid, localTargets, action);
+                localIndex += 1;
+                if (next) localGrid = next;
+                render(localGrid);
+                if (gridSolved(localGrid)) return finishSolved(localIndex);
+                setStatus(`Solving ${localIndex}/${localPath.length}`, 'solving');
+                return 'continue';
+            }
+
             const res = await fetch('/api/solve_step', { method: 'POST' });
             const data = await res.json();
             render(data.grid);
-            
-            if (data.solved) {
-                solved++;
-                moves += data.steps;
-                document.getElementById('solved').textContent = solved;
-                document.getElementById('moves').textContent = moves;
-                return 'solved';
-            }
+
+            if (data.solved) return finishSolved(data.steps);
             if (data.gave_up) return 'failed';
-            
+
             setStatus(`Solving ${data.steps}/${data.total}`, 'solving');
             return 'continue';
+        }
+
+        function finishSolved(stepCount) {
+            solved++;
+            moves += stepCount;
+            document.getElementById('solved').textContent = solved;
+            document.getElementById('moves').textContent = moves;
+            return 'solved';
         }
 
         async function run() {

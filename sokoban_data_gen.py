@@ -262,7 +262,9 @@ def generate_dataset(num_episodes=500, output_file="sokoban_dataset.npy"):
             attempts += 1
             traj = generate_trajectory(env, scramble_steps)
             
-            if traj and len(traj) >= 5:  # At least 5 moves (filter out trivial puzzles)
+            # Training filter: drop BFS trajectories shorter than 5. GS-T5 eval does
+            # NOT apply this filter, so published 20.8% includes shorter boards.
+            if traj and len(traj) >= 5:
                 # Store as list of grids (original format for compatibility)
                 grids = [t[0] for t in traj]
                 all_trajectories.append(np.array(grids))

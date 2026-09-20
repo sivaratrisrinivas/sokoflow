@@ -16,6 +16,7 @@ Writes eval/gs_t5_solve_rate.json and prints a markdown table to stdout.
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import platform
@@ -37,7 +38,10 @@ from sokoban_data_gen import SokobanGen, bfs_solve  # noqa: E402
 from app import diffusion_solve_fast  # noqa: E402
 
 OUTPUT_PATH = ROOT / "eval" / "gs_t5_solve_rate.json"
-MODEL_PATH = ROOT / "sokoban_diffusion.pth"
+_model_env = os.environ.get("SOKOFLOW_MODEL_PATH", "sokoban_diffusion.pth")
+MODEL_PATH = Path(_model_env)
+if not MODEL_PATH.is_absolute():
+    MODEL_PATH = ROOT / MODEL_PATH
 MODEL_NAME = "SokobanDiffusion"
 SEED = 42
 N_PER_CONFIG = 20
@@ -221,22 +225,29 @@ def markdown_table(results: dict) -> str:
     return "\n".join(lines)
 
 
-def run() -> dict:
+def run(
+    *,
+    n_per_config: int = N_PER_CONFIG,
+    configs: list[dict] | None = None,
+    seed: int = SEED,
+) -> dict:
     if not MODEL_PATH.exists():
         raise FileNotFoundError(f"Missing model weights at {MODEL_PATH}")
 
-    random.seed(SEED)
-    np.random.seed(SEED)
+    selected = configs if configs is not None else CONFIGS
+    random.seed(seed)
+    np.random.seed(seed)
     import torch
 
-    torch.manual_seed(SEED)
+    torch.manual_seed(seed)
 
     started = time.time()
     puzzles: list[dict] = []
     puzzle_id = 0
+    total = len(selected) * n_per_config
 
-    for config in CONFIGS:
-        for _ in range(N_PER_CONFIG):
+    for config in selected:
+        for _ in range(n_per_config):
             puzzle_id += 1
             grid, targets, gen_attempts, already_solved = generate_scrambled(
                 config["num_boxes"], config["scramble_steps"]
@@ -274,7 +285,7 @@ def run() -> dict:
                 "ok" if diffusion_solved else "FAIL",
             )
             print(
-                f"[{puzzle_id}/{len(CONFIGS) * N_PER_CONFIG}] "
+                f"[{puzzle_id}/{total}] "
                 f"{config['difficulty']} boxes={config['num_boxes']} "
                 f"scramble={config['scramble_steps']} {status}",
                 flush=True,
@@ -284,7 +295,7 @@ def run() -> dict:
     for p in puzzles:
         grouped[(p["difficulty"], p["num_boxes"], p["scramble_steps"])].append(p)
     by_config = []
-    for config in CONFIGS:
+    for config in selected:
         key = (config["difficulty"], config["num_boxes"], config["scramble_steps"])
         by_config.append({**config, "summary": summarize(grouped[key])})
 
@@ -310,8 +321,8 @@ def run() -> dict:
         "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "measured_at_utc": datetime.now(timezone.utc).isoformat(),
         "dataset_size": len(puzzles),
-        "n_per_config": N_PER_CONFIG,
-        "seed": SEED,
+        "n_per_config": n_per_config,
+        "seed": seed,
         "bfs_max_nodes": BFS_MAX_NODES,
         "hardware": hardware_info(),
         "protocol": {
@@ -323,6 +334,11 @@ def run() -> dict:
             ),
             "bfs": "sokoban_data_gen.bfs_solve with max_nodes=30000",
             "diffusion": "app.diffusion_solve_fast with max_iters=20 (production path)",
+            "eval": (
+                "GS-T5 does not drop short BFS trajectories. Training "
+                "sokoban_data_gen.generate_dataset keeps only len(traj) >= 5. "
+                "Those filters do not match."
+            ),
         },
         "elapsed_seconds": time.time() - started,
         "by_difficulty": by_difficulty,
@@ -332,15 +348,46 @@ def run() -> dict:
     return results
 
 
-def main() -> None:
-    results = run()
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT_PATH.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="GS-T5 solve-rate measurement (or a tiny smoke run).")
+    parser.add_argument(
+        "--smoke",
+        action="store_true",
+        help="Run 1 easy puzzle and do not overwrite eval/gs_t5_solve_rate.json.",
+    )
+    parser.add_argument("--n-per-config", type=int, default=None)
+    parser.add_argument("--max-configs", type=int, default=None)
+    parser.add_argument("--output", type=Path, default=None)
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = parse_args(argv)
+    configs = list(CONFIGS)
+    if args.max_configs is not None:
+        configs = configs[: max(1, args.max_configs)]
+    n_per_config = N_PER_CONFIG if args.n_per_config is None else max(1, args.n_per_config)
+    if args.smoke:
+        configs = CONFIGS[:1]
+        n_per_config = 1
+
+    results = run(n_per_config=n_per_config, configs=configs)
     table = markdown_table(results)
     print()
     print(table)
     print()
-    print(f"Wrote {OUTPUT_PATH}")
+
+    if args.smoke:
+        smoke_path = args.output or (ROOT / "eval" / "smoke_solve_rate.json")
+        smoke_path.parent.mkdir(parents=True, exist_ok=True)
+        smoke_path.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+        print(f"Smoke write {smoke_path} (historical GS-T5 table left unchanged).")
+        return
+
+    out = args.output or OUTPUT_PATH
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+    print(f"Wrote {out}")
 
 
 if __name__ == "__main__":

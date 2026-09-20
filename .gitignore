@@ -1,10 +1,15 @@
 # Model weights and datasets (too large for git)
 *.pth
+!sokoban_diffusion.pth
 *.npy
 *.pt
 *.ckpt
 *.h5
 *.pkl
+eval/smoke_solve_rate.json
+eval/gs_t5_solve_rate.rerun.json
+.netlify
+.vercel
 
 # Python cache
 __pycache__/
