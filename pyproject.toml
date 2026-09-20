@@ -14,7 +14,7 @@ dependencies = [
     "flask-cors>=4.0.0,<7",
     "gunicorn>=22.0.0,<26",
     "numpy>=1.24.0,<3",
-    "torch>=2.0.0,<3",
+    "torch==2.5.1+cpu",
 ]
 
 [project.optional-dependencies]
@@ -25,6 +25,14 @@ dev = [
 [project.urls]
 Homepage = "https://github.com/sivaratrisrinivas/sokoflow"
 Repository = "https://github.com/sivaratrisrinivas/sokoflow"
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
 
 [tool.setuptools]
 py-modules = [
