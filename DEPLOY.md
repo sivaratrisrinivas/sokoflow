@@ -51,9 +51,14 @@ Set `min_machines_running = 0` if you accept cold starts; keep 1 worker equivale
 
 ## Vercel (not a live demo on this Hobby account)
 
-Vercel Flask is configured (`vercel.json`, project `sokoflow` on team Srini, Deployment Protection off). The first production deploy **failed** with `LAMBDA_SIZE_EXCEEDED`: default PyPI torch bundled to **5306 MB** vs a **500 MB** function cap.
+A Flask project was linked (`sokoflow` on team Srini, Deployment Protection off). Measured bundle sizes:
 
-`requirements.txt` now pins `torch==2.5.1+cpu`. If a later build still exceeds 500 MB, use Docker / Railway / Render / HF Spaces. Do not publish a Vercel URL unless `/health` returns `"model_loaded": true` without auth.
+| Attempt | Torch source | Bundle | Hobby cap |
+|---|---|---:|---:|
+| CUDA default from pyproject `torch>=2` | PyPI | **5306.44 MB** | 500 MB |
+| `torch==2.5.1+cpu` via uv CPU index | download.pytorch.org/whl/cpu | **731.17 MB** | 500 MB |
+
+Both failed `LAMBDA_SIZE_EXCEEDED`. This account’s function cap is 500 MB (not the 5 GB Fluid figure). **Do not publish a Vercel URL.** Use Docker / Railway / Render / HF Spaces Docker.
 
 ## Env vars
 

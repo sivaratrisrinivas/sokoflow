@@ -112,4 +112,4 @@ Install as a package with `pip install -e ".[dev]"` (`pyproject.toml`).
 
 ## Deploy
 
-See [DEPLOY.md](DEPLOY.md). Persistent Docker/Railway/Render/HF Spaces is the realistic host. A Vercel Flask project was linked and **failed** on this Hobby account (`LAMBDA_SIZE_EXCEEDED` 5306 MB vs 500 MB). Do not set the GitHub homepage to a Vercel URL unless `/health` is actually public and healthy.
+See [DEPLOY.md](DEPLOY.md). Persistent Docker/Railway/Render/HF Spaces is the realistic host. Vercel Hobby was tried twice: CUDA torch **5306 MB**, CPU torch **731 MB**, both over the **500 MB** function cap. Do not set the GitHub homepage to a Vercel URL.
