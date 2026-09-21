@@ -40,7 +40,6 @@ from sokoban_solve import (
     bfs_solve_report,
     diffusion_solve_report,
     ensure_model_loaded,
-    model_error,
     walk_path_frames,
 )
 
@@ -278,10 +277,6 @@ def play(state: dict[str, Any]):
     targets = np.array(state["targets"], dtype=bool)
     state["grid"] = grid.copy()
     yield render_solo(state), status_html("Running diffusion…"), state
-
-    if not ensure_model_loaded():
-        yield render_solo(state), status_html(f"Model not loaded: {model_error()}"), state
-        return
 
     report, bfs = _compute(grid, targets)
     frames = report.get("denoise_frames") or []

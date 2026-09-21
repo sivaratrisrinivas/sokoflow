@@ -263,9 +263,12 @@ def _action_strip(actions: list[str], first_illegal: dict | None) -> str:
 
 def _frame_caption(frame: dict, index: int, n: int) -> str:
     if index == 0:
-        return "noise"
+        return "start"
     if index == n - 1:
         return "plan"
+    legal_n = frame.get("legal_n")
+    if legal_n is not None:
+        return f"{int(legal_n)} moves"
     return f"t={int(frame['t'])}"
 
 
@@ -320,7 +323,7 @@ def denoise_theater_html(
             + '<div class="frames">'
             + "".join(frame_divs)
             + "</div>"
-            + '<div class="scrub"><span>noise</span><div class="ticks">'
+            + '<div class="scrub"><span>start</span><div class="ticks">'
             + "".join(labels)
             + "</div><span>plan</span></div>"
         )

@@ -66,3 +66,22 @@ def test_gradio_core_objective_within_two_clicks():
     assert 'id="theater"' in flask
     assert 'id="twin"' in flask
     assert 'id="autopsy"' in flask
+
+
+def test_gradio_play_model_miss_still_renders_twin():
+    """Match Flask: missing weights still show BFS + an honest why, not a bare status line."""
+    text = (ROOT / "gradio_app" / "app.py").read_text(encoding="utf-8")
+    play = text.split("def play(")[1].split("\nwith gr.Blocks")[0]
+    assert "_compute(" in play
+    assert 'mode="twin"' in play
+    assert "compose_stage(" in play
+    assert 'status_html(f"Model not loaded:' not in play
+    assert "bfs_solve_report" in text
+
+
+def test_flask_play_resets_chrome_each_play():
+    flask = (ROOT / "templates" / "index.html").read_text(encoding="utf-8")
+    start = flask.index("async function playOnce()")
+    body = flask[start : flask.index("async function freshPuzzle()")]
+    assert "resetChrome()" in body
+    assert body.index("resetChrome()") < body.index("theater').classList.add('open'")

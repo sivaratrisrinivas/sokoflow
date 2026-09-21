@@ -286,7 +286,7 @@
         <div id="theater-board" class="board compact" aria-label="Denoise board"></div>
         <div class="action-strip" id="action-strip"></div>
         <div class="scrub" id="scrub" hidden>
-            <span>noise</span>
+            <span>start</span>
             <div class="ticks" id="ticks"></div>
             <span>plan</span>
         </div>
@@ -446,10 +446,11 @@
             const frame = denoiseFrames[i];
             const walked = replayUntilIllegal(localGrid, localTargets, frame.actions || []);
             const n = denoiseFrames.length;
-            const label = i === 0 ? 'noise' : (i === n - 1 ? 'plan' : ('t=' + frame.t));
+            const legalN = frame.legal_n != null ? frame.legal_n : (frame.actions || []).length;
+            const label = i === 0 ? 'start' : (i === n - 1 ? 'plan' : (legalN + ' moves'));
             document.getElementById('t-label').textContent = label;
             renderInto(document.getElementById('theater-board'), walked.grid, true);
-            renderStrip(frame.actions || [], walked.cut);
+            renderStrip(frame.actions || [], (frame.actions || []).length);
             document.querySelectorAll('#ticks button').forEach((btn, k) => {
                 btn.classList.toggle('on', k === i);
             });
@@ -509,6 +510,7 @@
             if (playing) return;
             playing = true;
             document.getElementById('btn').textContent = 'Playing';
+            resetChrome();
             if (!localGrid) {
                 const ok = await newGame();
                 if (!ok) {

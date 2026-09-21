@@ -10,7 +10,7 @@ The live board is **colorful** (wall / floor / box / goal / player / box-on-goal
 
 SokoFlow trains a CNN + transformer denoiser on reverse-scrambled Sokoban trajectories, then samples action sequences with DDIM. A Flask UI and a Gradio Space show a scrambled board; **Play** (1 click) runs Denoise Theater, then a BFS twin and — if diffusion fails — an autopsy. It does **not** hide that BFS is stronger.
 
-Demo UI (GS-T48): theater auto-plays 10-step DDIM (noise → action sequence as a board path + arrows). The BFS twin reports solved/failed and node budget. Failures name the first illegal move, a stuck push, or exhausted iterations. After Play, a short GIF of the denoise run can be saved. No invented rates.
+Demo UI (GS-T48): theater auto-plays the **executed legal path** the solver actually ran (same prefix as the Diffusion twin and the autopsy). Scrub ticks and the saved GIF are prefixes of that path, not a disagreeing iteration-0 DDIM sample. The BFS twin reports solved/failed and node budget. Failures name the first illegal move, a stuck push, or exhausted iterations. No invented rates.
 
 ## Why
 

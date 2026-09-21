@@ -6,9 +6,12 @@ from sokoban_data_gen import SokobanGen, PLAYER, BOX, TARGET, FLOOR, WALL, bfs_s
 from sokoban_render import compose_stage, denoise_theater_html, twin_html
 from sokoban_solve import (
     bfs_solve_report,
+    diffusion_solve_report,
     format_autopsy,
     illegal_reason,
     replay_until_illegal,
+    theater_frames_from_path,
+    walk_path_frames,
 )
 
 
@@ -113,7 +116,7 @@ def test_theater_and_twin_html():
     theater = denoise_theater_html(frames, env.targets, interactive=True)
     assert "Denoise" in theater
     assert "name=\"denoise-t\"" in theater
-    assert "noise" in theater
+    assert "start" in theater
     assert "plan" in theater
     twin = twin_html(
         env.grid,
@@ -152,6 +155,32 @@ def test_denoise_gif_is_gif89a():
     img = raster_board(env.grid, env.targets)
     assert img.shape[0] == img.shape[1]
     assert img.max() <= 7
+
+
+def test_theater_frames_are_prefixes_of_executed_path():
+    env = _one_push()
+    path = ["RIGHT"]
+    frames = theater_frames_from_path(env.grid, env.targets, path)
+    assert frames[0]["actions"] == []
+    assert frames[0]["legal_n"] == 0
+    assert frames[-1]["actions"] == path
+    end = walk_path_frames(env.grid, env.targets, path)[-1]
+    assert np.array_equal(frames[-1]["grid"], end["grid"])
+    for frame in frames:
+        assert frame["actions"] == path[: frame["legal_n"]]
+        assert frame["first_illegal"] is None
+
+
+def test_report_theater_matches_legal_prefix_not_a_ddim_sample():
+    env = _one_push()
+    report = diffusion_solve_report(env.grid, env.targets, max_iters=5, trace=True)
+    frames = report["denoise_frames"]
+    assert frames
+    assert frames[-1]["actions"] == report["path"]
+    for frame in frames:
+        assert frame["actions"] == report["path"][: frame["legal_n"]]
+    twin_end = walk_path_frames(env.grid, env.targets, report["path"])[-1]
+    assert np.array_equal(frames[-1]["grid"], twin_end["grid"])
 
 
 def test_sample_fast_trace_starts_from_noise():

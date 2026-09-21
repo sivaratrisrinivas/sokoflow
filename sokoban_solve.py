@@ -254,17 +254,61 @@ def _empty_report(*, reason: str, autopsy: str, max_iters: int) -> dict:
     }
 
 
-def _frame_from_actions(grid, targets, action_indices, t: int) -> dict:
-    names = [ACTION_MAP[int(a)] for a in action_indices]
-    walked = replay_until_illegal(grid, targets, names)
-    return {
-        "t": int(t),
-        "actions": names,
-        "legal_n": len(walked["legal"]),
-        "grid": walked["grid"],
-        "trail": walked["trail"],
-        "first_illegal": walked["first_illegal"],
-    }
+def _spread_indices(length: int, max_frames: int) -> list[int]:
+    """Inclusive indices in [0, length-1], always including the ends."""
+    if length <= 1:
+        return [0]
+    max_frames = max(2, int(max_frames))
+    if length <= max_frames:
+        return list(range(length))
+    picks: list[int] = []
+    for i in range(max_frames):
+        idx = int(round(i * (length - 1) / (max_frames - 1)))
+        if not picks or idx != picks[-1]:
+            picks.append(idx)
+    if picks[0] != 0:
+        picks.insert(0, 0)
+    if picks[-1] != length - 1:
+        picks.append(length - 1)
+    return picks
+
+
+def theater_frames_from_path(grid, targets, path: list[str] | None, *, max_frames: int = 11) -> list[dict]:
+    """Theater / GIF frames along the executed legal path (same path the twin uses)."""
+    path = list(path or [])
+    walked = walk_path_frames(grid, targets, path)
+    picks = _spread_indices(len(walked), max_frames)
+    n = len(picks)
+    frames: list[dict] = []
+    for i, wi in enumerate(picks):
+        if i == 0:
+            t = 100
+        elif i == n - 1:
+            t = 0
+        else:
+            t = int(round(100 * (1 - i / (n - 1))))
+        frames.append(
+            {
+                "t": t,
+                "actions": path[:wi],
+                "legal_n": wi,
+                "grid": walked[wi]["grid"],
+                "trail": walked[wi]["trail"],
+                "first_illegal": None,
+            }
+        )
+    return frames
+
+
+def _attach_theater(report: dict, start_grid, targets, *, trace: bool) -> dict:
+    if trace:
+        report["denoise_frames"] = theater_frames_from_path(
+            start_grid, targets, report.get("path") or []
+        )
+    else:
+        report["denoise_frames"] = []
+    report["autopsy"] = format_autopsy(report)
+    return report
 
 
 def format_autopsy(report: dict) -> str:
@@ -339,11 +383,10 @@ def diffusion_solve_report(grid, targets, max_iters=20, *, trace: bool = True, d
     visited = {current_grid.tobytes()}
     first_illegal = None
     skipped_illegal = 0
-    denoise_frames: list[dict] = []
-    theater_sample = 0
     stalled_iters = 0
     iters_used = 0
     reason = "exhausted_iters"
+    best_sample = 0
 
     for iteration in range(max_iters):
         iters_used = iteration + 1
@@ -355,11 +398,7 @@ def diffusion_solve_report(grid, targets, max_iters=20, *, trace: bool = True, d
         batch_state = state_tensor.repeat(4, 1, 1, 1)
 
         with torch.inference_mode():
-            if trace and iteration == 0:
-                all_actions, traces = diffusion_model.sample_fast_trace(batch_state, steps=ddim_steps)
-            else:
-                all_actions = diffusion_model.sample_fast(batch_state, steps=ddim_steps)
-                traces = None
+            all_actions = diffusion_model.sample_fast(batch_state, steps=ddim_steps)
 
         best_progress = 0
         best_result = None
@@ -383,13 +422,6 @@ def diffusion_solve_report(grid, targets, max_iters=20, *, trace: bool = True, d
                         first_illegal = first_here
                     current_grid = test_grid
                     solution = solution + test_solution
-                    if traces is not None and not denoise_frames:
-                        denoise_frames = [
-                            _frame_from_actions(
-                                start_grid, targets, tr["actions"][seq_idx].tolist(), tr["t"]
-                            )
-                            for tr in traces
-                        ]
                     report = {
                         "solved": True,
                         "path": solution,
@@ -399,11 +431,9 @@ def diffusion_solve_report(grid, targets, max_iters=20, *, trace: bool = True, d
                         "first_illegal": first_illegal,
                         "skipped_illegal": skipped_illegal,
                         "boxes_off": 0,
-                        "denoise_frames": denoise_frames,
                         "sample_index": seq_idx,
                     }
-                    report["autopsy"] = format_autopsy(report)
-                    return report
+                    return _attach_theater(report, start_grid, targets, trace=trace)
 
                 action = ACTION_MAP[int(action_idx)]
                 why = illegal_reason(test_grid, targets, test_pos, action)
@@ -437,13 +467,6 @@ def diffusion_solve_report(grid, targets, max_iters=20, *, trace: bool = True, d
                 best_progress = progress
                 best_result = (test_grid, test_pos, test_solution, test_visited)
                 best_sample = seq_idx
-
-        if traces is not None and not denoise_frames:
-            theater_sample = best_sample
-            denoise_frames = [
-                _frame_from_actions(start_grid, targets, tr["actions"][theater_sample].tolist(), tr["t"])
-                for tr in traces
-            ]
 
         if best_result and best_result[2]:
             current_grid, current_pos, new_moves, visited = best_result
@@ -480,21 +503,16 @@ def diffusion_solve_report(grid, targets, max_iters=20, *, trace: bool = True, d
 
     report = {
         "solved": bool(solved),
-        "path": solution if solved else solution,
+        "path": solution,
         "iters_used": iters_used,
         "max_iters": max_iters,
         "reason": reason if not solved else "solved",
         "first_illegal": first_illegal,
         "skipped_illegal": skipped_illegal,
         "boxes_off": boxes_off_goal(current_grid),
-        "denoise_frames": denoise_frames,
-        "sample_index": theater_sample,
+        "sample_index": best_sample,
     }
-    # Unsolved: still return the legal prefix. Callers must check `solved`.
-    if not solved:
-        report["path"] = solution
-    report["autopsy"] = format_autopsy(report)
-    return report
+    return _attach_theater(report, start_grid, targets, trace=trace)
 
 
 def diffusion_solve_fast(grid, targets, max_iters=20):
