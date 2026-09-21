@@ -106,9 +106,12 @@ footer, .footer, .built-with,
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
+  width: 100% !important;
 }
 #board-wrap .prose, #board-wrap .html-container {
   display: block;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 #status-line, #status p, #status {
@@ -153,6 +156,11 @@ footer, .footer, .built-with,
   line-height: 1.55;
   max-width: 400px;
   margin: 28px auto 0;
+}
+
+.save-clip {
+  color: #8A847A !important;
+  text-decoration: none !important;
 }
 
 .block, .label-wrap, .empty { border: none !important; box-shadow: none !important; }

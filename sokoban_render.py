@@ -182,7 +182,9 @@ def board_css() -> str:
   flex-wrap: wrap;
   justify-content: center;
   gap: 28px 32px;
+  width: 100%;
 }}
+.stage {{ width: 100%; }}
 .twin-pane {{ text-align: center; }}
 .pane-status {{
   margin: 8px 0 0;
@@ -394,9 +396,10 @@ def compose_stage(
     autopsy: str = "",
 ) -> str:
     """One HTML stage: solo puzzle, denoise auto-play, or theater + BFS twin."""
-    chunks = [f"<style>{board_css()}</style>"]
+    chunks = [f'<style>{board_css()}</style><div class="stage">']
     if mode == "single":
         chunks.append(board_html(grid, targets, solo=True, include_style=False))
+        chunks.append("</div>")
         return "".join(chunks)
 
     if theater_frames:
@@ -426,4 +429,5 @@ def compose_stage(
         if autopsy:
             chunks.append(autopsy_html(autopsy))
 
+    chunks.append("</div>")
     return "".join(chunks)
