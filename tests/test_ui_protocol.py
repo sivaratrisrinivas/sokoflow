@@ -85,3 +85,15 @@ def test_flask_play_resets_chrome_each_play():
     body = flask[start : flask.index("async function freshPuzzle()")]
     assert "resetChrome()" in body
     assert body.index("resetChrome()") < body.index("theater').classList.add('open'")
+
+
+def test_flask_gates_success_on_diffusion_solved_not_path():
+    flask = (ROOT / "templates" / "index.html").read_text(encoding="utf-8")
+    assert "diffusionSolved = Boolean(data.diffusion_solved)" in flask
+    assert "function executedDiffusionActions()" in flask
+    start = flask.index("async function playOnce()")
+    body = flask[start : flask.index("async function freshPuzzle()")]
+    assert "executedDiffusionActions()" in body
+    assert "walkPath(localGrid, localTargets, localPath)" not in body
+    assert "diffusionSolved" in body
+    assert "const dWalk = executedDiffusionActions()" in body

@@ -260,7 +260,11 @@ def new_game():
 
     report = diffusion_solve_report(env.grid, env.targets, max_iters=20, trace=True)
     bfs = bfs_solve_report(env.grid, env.targets, max_nodes=30000)
-    solution_path = report.get("path") or []
+    solved = bool(report.get("solved"))
+    executed_path = list(report.get("path") or [])
+    # Public path is empty when unsolved so clients cannot treat a legal
+    # prefix as success. Theater still ships executed prefixes in denoise.
+    public_path = executed_path if solved else []
     frames = [
         {
             "t": frame["t"],
@@ -274,17 +278,17 @@ def new_game():
     if report.get("denoise_frames"):
         clip = denoise_gif_data_uri(report["denoise_frames"], env.targets)
 
-    sid = _store_session(env, solution_path)
+    sid = _store_session(env, public_path)
     return _json(
         {
             "grid": env.grid,
             "targets": env.targets,
-            "solvable": bool(report.get("solved")),
-            "moves": len(solution_path),
-            "path": solution_path,
-            "diffusion_solved": bool(report.get("solved")),
+            "solvable": solved,
+            "moves": len(public_path),
+            "path": public_path,
+            "diffusion_solved": solved,
             "diffusion_reason": report.get("reason"),
-            "autopsy": "" if report.get("solved") else (report.get("autopsy") or ""),
+            "autopsy": "" if solved else (report.get("autopsy") or ""),
             "denoise": frames,
             "clip_gif": clip,
             "bfs": {

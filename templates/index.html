@@ -406,6 +406,12 @@
             return frames;
         }
 
+        function executedDiffusionActions() {
+            if (diffusionSolved) return localPath;
+            const last = denoiseFrames[denoiseFrames.length - 1];
+            return (last && last.actions) || [];
+        }
+
         function renderInto(container, grid, compact) {
             container.innerHTML = '';
             if (compact) container.classList.add('compact');
@@ -536,7 +542,8 @@
             }
 
             document.getElementById('twin').classList.add('open');
-            const dFrames = walkPath(localGrid, localTargets, localPath);
+            const dWalk = executedDiffusionActions();
+            const dFrames = walkPath(localGrid, localTargets, dWalk);
             const bFrames = walkPath(localGrid, localTargets, bfsPath);
             const n = Math.max(dFrames.length, bFrames.length, 1);
             const dEnd = diffusionSolved

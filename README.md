@@ -10,7 +10,7 @@ The live board is **colorful** (wall / floor / box / goal / player / box-on-goal
 
 SokoFlow trains a CNN + transformer denoiser on reverse-scrambled Sokoban trajectories, then samples action sequences with DDIM. A Flask UI and a Gradio Space show a scrambled board; **Play** (1 click) runs Denoise Theater, then a BFS twin and — if diffusion fails — an autopsy. It does **not** hide that BFS is stronger.
 
-Demo UI (GS-T48): theater auto-plays the **executed legal path** the solver actually ran (same prefix as the Diffusion twin and the autopsy). Scrub ticks and the saved GIF are prefixes of that path, not a disagreeing iteration-0 DDIM sample. The BFS twin reports solved/failed and node budget. Failures name the first illegal move, a stuck push, or exhausted iterations. No invented rates.
+Demo UI (GS-T48): theater auto-plays the **executed legal path** the solver actually ran (same prefix as the Diffusion twin and the autopsy). Scrub ticks and the saved GIF are prefixes of that path, not a disagreeing iteration-0 DDIM sample. The BFS twin reports solved/failed and node budget. Failures name the first illegal move, a stuck push, or exhausted iterations. HTTP `path` from `/api/new_game` is empty when `diffusion_solved` is false — do not treat a legal prefix as success. Gate UI on `diffusion_solved`. No invented rates.
 
 ## Why
 
@@ -156,7 +156,7 @@ The single diffusion win is Microban 44 ("Duh!"), a 5×3 one-push puzzle. JSON: 
 |---|---|---|
 | GET | `/health` | Liveness + whether weights loaded |
 | GET | `/` | UI — puzzle loaded; Play runs the path |
-| POST | `/api/new_game` | Scramble + solve. JSON body optional `{difficulty: int}` |
+| POST | `/api/new_game` | Scramble + solve. `path` is `[]` when `diffusion_solved`/`solvable` is false; denoise frames still hold executed prefixes. JSON body optional `{difficulty: int}` |
 | POST | `/api/solve` | Stateless solve. Body `{grid, targets}` 8×8 |
 | POST | `/api/solve_step` | Playback using `sokoflow_sid` cookie |
 
