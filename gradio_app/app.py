@@ -103,11 +103,13 @@ footer, .footer, .built-with,
   justify-content: center;
 }
 
-#status p, #status {
+#status-line, #status p, #status {
   text-align: center;
   color: var(--muted) !important;
   font-size: 14px !important;
   min-height: 1.4em;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 #play {
@@ -194,35 +196,39 @@ def _solve(grid, targets):
     return diffusion_solve_fast(grid, targets, max_iters=20)
 
 
+def status_html(text: str) -> str:
+    return f'<p id="status-line">{text}</p>'
+
+
 def load_default():
     ensure_model_loaded()
     state = scramble_puzzle(seed=DEFAULT_SEED)
-    return render_state(state), "A puzzle is ready.", state
+    return render_state(state), status_html("A puzzle is ready."), state
 
 
 def new_puzzle(_state):
     state = scramble_puzzle(seed=None)
-    return render_state(state), "A puzzle is ready.", state
+    return render_state(state), status_html("A puzzle is ready."), state
 
 
 def play(state: dict[str, Any]):
     if not state or state.get("grid") is None:
         state = scramble_puzzle(seed=DEFAULT_SEED)
-        yield render_state(state), "A puzzle is ready.", state
+        yield render_state(state), status_html("A puzzle is ready."), state
         return
 
     grid = np.array(state["start_grid"] if state.get("start_grid") is not None else state["grid"], dtype=int)
     targets = np.array(state["targets"], dtype=bool)
     state["grid"] = grid.copy()
-    yield render_state(state), "Running diffusion…", state
+    yield render_state(state), status_html("Running diffusion…"), state
 
     if not ensure_model_loaded():
-        yield render_state(state), f"Model not loaded: {model_error()}", state
+        yield render_state(state), status_html(f"Model not loaded: {model_error()}"), state
         return
 
     path = _solve(grid, targets)
     if not path:
-        yield render_state(state), "No path this time — expected on scramble-hard boards.", state
+        yield render_state(state), status_html("No path this time — expected on scramble-hard boards."), state
         return
 
     current = grid.copy()
@@ -231,22 +237,22 @@ def play(state: dict[str, Any]):
         nxt, _ = is_valid_move(current, targets, pos, action)
         if nxt is None:
             state["grid"] = current
-            yield render_state(state), f"Stopped at {i - 1}/{len(path)}", state
+            yield render_state(state), status_html(f"Stopped at {i - 1}/{len(path)}"), state
             return
         current = nxt
         state["grid"] = current
-        yield render_state(state), f"{i} / {len(path)}", state
+        yield render_state(state), status_html(f"{i} / {len(path)}"), state
         time.sleep(0.11)
 
     note = "Solved" if is_solved(current) else "Finished"
-    yield render_state(state), note, state
+    yield render_state(state), status_html(note), state
 
 
 with gr.Blocks(title="SokoFlow", theme=THEME, css=CSS, analytics_enabled=False) as demo:
     gr.HTML('<p id="wordmark">SokoFlow</p>')
     state = gr.State(empty_state())
     board = gr.HTML(empty_board_html(), elem_id="board-wrap")
-    status = gr.Markdown("A puzzle is ready.", elem_id="status")
+    status = gr.HTML('<p id="status-line">A puzzle is ready.</p>', elem_id="status")
     btn_play = gr.Button("Play", variant="primary", elem_id="play")
     btn_new = gr.Button("New puzzle", elem_id="quiet-new")
     gr.HTML(
