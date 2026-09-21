@@ -15,6 +15,17 @@ FLOOR, WALL, PLAYER, BOX, TARGET, BOX_TARGET = 0, 1, 2, 3, 4, 5
 ACTIONS = {0: (-1, 0), 1: (1, 0), 2: (0, -1), 3: (0, 1)}
 ACTION_NAMES = {0: 'UP', 1: 'DOWN', 2: 'LEFT', 3: 'RIGHT'}
 
+# Training keeps trajectories with len >= 5. Scramble-hard eval uses the same
+# length gate. Historical GS-T5 eval did not. Committed weights were trained
+# with this length filter only; boxes-off >= 2 is a GS-T47 addition for future
+# datasets (see generate_dataset).
+MIN_TRAJECTORY_LEN = 5
+MIN_BOXES_OFF_TARGET = 2
+
+
+def boxes_off_target(grid):
+    return int(np.count_nonzero(grid == BOX))
+
 
 class SokobanGen:
     def __init__(self, width=8, height=8, num_boxes=3):
@@ -262,9 +273,12 @@ def generate_dataset(num_episodes=500, output_file="sokoban_dataset.npy"):
             attempts += 1
             traj = generate_trajectory(env, scramble_steps)
             
-            # Training filter: drop BFS trajectories shorter than 5. GS-T5 eval does
-            # NOT apply this filter, so published 20.8% includes shorter boards.
-            if traj and len(traj) >= 5:
+            # Align training with scramble-hard eval: drop short BFS paths and
+            # 1-box-off inflators. Committed sokoban_diffusion.pth was trained
+            # with only len(traj) >= 5 (not the boxes-off gate). Headline GS-T47
+            # numbers use those committed weights, not a retrain.
+            off = boxes_off_target(env.grid)
+            if traj and len(traj) >= MIN_TRAJECTORY_LEN and off >= MIN_BOXES_OFF_TARGET:
                 # Store as list of grids (original format for compatibility)
                 grids = [t[0] for t in traj]
                 all_trajectories.append(np.array(grids))

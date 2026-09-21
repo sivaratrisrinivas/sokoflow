@@ -36,15 +36,24 @@ def test_health_reports_model(client):
     payload = response.get_json()
     assert payload["status"] in {"ok", "degraded"}
     assert payload["model_loaded"] is True
-    assert payload["eval"]["diffusion_solve_rate"] == 0.208
-    assert payload["eval"]["task"] == "GS-T5"
+    assert payload["eval"]["task"] == "GS-T47-scramble-hard"
+    assert payload["eval"]["diffusion_solve_rate"] == 0.0625
+    assert payload["eval"]["historical_gs_t5"]["diffusion_solve_rate"] == 0.208
 
 
 def test_index_renders(client):
     response = client.get("/")
     assert response.status_code == 200
     assert b"SokoFlow" in response.data
+    assert b"Play" in response.data
+    assert b"6.2%" in response.data
     assert b"20.8%" in response.data
+    assert b"--wall:" in response.data or b"var(--wall)" in response.data
+    assert b"#C4A574" in response.data
+    assert b"#E39B2D" in response.data
+    assert b"#5BA8D4" in response.data
+    assert b"#E25A45" in response.data
+    assert b"#3DAA6D" in response.data
 
 
 def test_new_game_rejects_payload_over_size_limit(client):

@@ -25,7 +25,7 @@ RUN pip install --no-cache-dir --upgrade pip \
         numpy==2.1.3 \
     && pip install --no-cache-dir torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
 
-COPY app.py sokoban_engine.py sokoban_diffusion.py sokoban_data_gen.py ./
+COPY app.py sokoban_engine.py sokoban_diffusion.py sokoban_data_gen.py sokoban_solve.py sokoban_render.py ./
 COPY sokoban_diffusion.pth ./
 COPY templates ./templates
 
