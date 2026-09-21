@@ -42,6 +42,8 @@ py-modules = [
     "sokoban_engine",
     "sokoban_diffusion",
     "sokoban_data_gen",
+    "sokoban_solve",
+    "sokoban_render",
 ]
 
 [tool.pytest.ini_options]

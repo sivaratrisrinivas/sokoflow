@@ -25,6 +25,35 @@ def test_gs_t5_historical_table_is_the_published_measurement():
     assert abs(overall["bfs_solve_rate"] - 0.9541666666666667) < 1e-12
 
 
+def test_scramble_hard_published_measurement():
+    path = Path(__file__).resolve().parent.parent / "eval" / "scramble_hard_solve_rate.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    overall = data["by_difficulty"]["overall"]
+    assert data["task"] == "GS-T47-scramble-hard"
+    assert data["date"] == "2026-09-21"
+    assert data["dataset_size"] == 240
+    assert overall["diffusion_solved"] == 15
+    assert overall["bfs_solved"] == 226
+    assert abs(overall["diffusion_solve_rate"] - 0.0625) < 1e-12
+    assert all(p["boxes_off_target"] >= 2 for p in data["puzzles"])
+    assert all(
+        p["bfs_length"] is None or p["bfs_length"] >= 5 for p in data["puzzles"]
+    )
+
+
+def test_microban_ood_published_measurement():
+    path = Path(__file__).resolve().parent.parent / "eval" / "microban_ood_solve_rate.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    overall = data["by_difficulty"]["overall"]
+    assert data["task"] == "GS-T47-microban-ood"
+    assert data["date"] == "2026-09-21"
+    assert data["dataset_size"] == 38
+    assert overall["diffusion_solved"] == 1
+    assert overall["bfs_solved"] == 30
+    wins = [p for p in data["puzzles"] if p["diffusion_solved"]]
+    assert wins[0]["name"] == "44 'Duh!'"
+
+
 def test_eval_smoke_one_easy_puzzle():
     results = run(n_per_config=1, configs=CONFIGS[:1], seed=0)
     assert results["dataset_size"] == 1
@@ -35,6 +64,24 @@ def test_eval_smoke_one_easy_puzzle():
     assert results["by_difficulty"]["overall"]["n"] == 1
     published = json.loads(GS_T5.read_text(encoding="utf-8"))
     assert published["date"] == "2026-08-24"
+
+
+def test_scramble_hard_smoke_is_eligible():
+    results = run(n_per_config=1, configs=CONFIGS[:1], seed=0, protocol="scramble-hard")
+    puzzle = results["puzzles"][0]
+    assert puzzle["boxes_off_target"] >= 2
+    assert puzzle["bfs_length"] is None or puzzle["bfs_length"] >= 5
+    assert puzzle["scramble_hard_eligible"] is True
+    assert results["task"] == "GS-T47-scramble-hard"
+
+
+def test_microban_smoke_one_level():
+    from eval.microban_levels import MICROBAN_LEVELS
+
+    results = run(protocol="microban", seed=0, levels=MICROBAN_LEVELS[:1])
+    assert results["task"] == "GS-T47-microban-ood"
+    assert results["dataset_size"] == 1
+    assert "diffusion_solved" in results["puzzles"][0]
 
 
 def test_non_smoke_default_write_is_dated_not_historical():

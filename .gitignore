@@ -7,6 +7,7 @@
 *.h5
 *.pkl
 eval/smoke_solve_rate.json
+eval/smoke_*.json
 eval/gs_t5_solve_rate-*.json
 eval/gs_t5_solve_rate.rerun.json
 .netlify

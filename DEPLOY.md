@@ -42,12 +42,32 @@ fly deploy
 
 Set `min_machines_running = 0` if you accept cold starts; keep 1 worker equivalent (this image already uses gunicorn workers=1).
 
-## Hugging Face Spaces (Docker)
+## Hugging Face Spaces (Gradio)
+
+Live: https://huggingface.co/spaces/Srini410/sokoflow
+
+Repo source of truth is `gradio_app/` (not the Space-only tree). The Space must stay **1-click**: a puzzle is on the board at load; **Play** runs diffusion. Colorful pieces, cream chrome.
+
+Push (maintainer):
+
+```bash
+# from repo root — Space root = gradio_app files + shared modules + weights
+cp sokoban_engine.py sokoban_diffusion.py sokoban_solve.py sokoban_render.py sokoban_diffusion.pth gradio_app/
+# huggingface-cli upload, or clone Srini410/sokoflow Space and copy:
+#   gradio_app/app.py          → Space app.py
+#   gradio_app/requirements.txt
+#   gradio_app/README.md       → Space README.md (YAML header)
+#   sokoban_engine.py sokoban_diffusion.py sokoban_solve.py sokoban_render.py sokoban_diffusion.pth
+```
+
+ZeroGPU Spaces still need `@spaces.GPU` on the solve wrapper (already in `gradio_app/app.py`) even though inference is CPU.
+
+## Hugging Face Spaces (Docker, Flask)
 
 1. Create a Docker Space.
-2. Point it at this repo, or copy `Dockerfile`, `app.py`, engine/diffusion modules, `templates/`, and `sokoban_diffusion.pth`.
+2. Point it at this repo, or copy `Dockerfile`, `app.py`, engine/diffusion/solve modules, `templates/`, and `sokoban_diffusion.pth`.
 3. HF sets `PORT=7860`; the image honors `$PORT`.
-4. Space URL is the live demo.
+4. Space URL is the live Flask demo. A puzzle loads; Play is the one primary action.
 
 ## Vercel (unsupported)
 
