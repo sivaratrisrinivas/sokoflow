@@ -360,10 +360,13 @@ def twin_html(
     d_stat = html_lib.escape(diffusion_status)
     b_stat = html_lib.escape(bfs_status)
     markup = (
-        '<div class="twin">'
-        '<div class="twin-pane"><p class="stage-kicker">Diffusion</p>'
+        '<div class="twin" style="display:flex !important;flex-wrap:wrap !important;'
+        'justify-content:center !important;gap:28px 32px !important;width:100% !important">'
+        '<div class="twin-pane" style="flex:0 0 auto !important;width:auto !important;text-align:center">'
+        '<p class="stage-kicker">Diffusion</p>'
         f'{left}<p class="pane-status">{d_stat}</p></div>'
-        '<div class="twin-pane"><p class="stage-kicker">BFS</p>'
+        '<div class="twin-pane" style="flex:0 0 auto !important;width:auto !important;text-align:center">'
+        '<p class="stage-kicker">BFS</p>'
         f'{right}<p class="pane-status">{b_stat}</p></div>'
         "</div>"
     )
@@ -396,7 +399,10 @@ def compose_stage(
     autopsy: str = "",
 ) -> str:
     """One HTML stage: solo puzzle, denoise auto-play, or theater + BFS twin."""
-    chunks = [f'<style>{board_css()}</style><div class="stage">']
+    chunks = [
+        f'<style>{board_css()}</style>'
+        '<div class="stage" style="width:100% !important;max-width:720px;margin:0 auto">'
+    ]
     if mode == "single":
         chunks.append(board_html(grid, targets, solo=True, include_style=False))
         chunks.append("</div>")

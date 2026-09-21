@@ -78,10 +78,19 @@ html, body, .gradio-container, .main, .contain {
 }
 
 .gradio-container {
-  max-width: 720px !important;
+  max-width: 760px !important;
   margin: 0 auto !important;
   padding: 64px 20px 80px !important;
   min-height: 100vh;
+}
+
+.gradio-container .block {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+.gradio-container .html-container {
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 footer, .footer, .built-with,
@@ -107,11 +116,31 @@ footer, .footer, .built-with,
   box-shadow: none !important;
   padding: 0 !important;
   width: 100% !important;
+  max-width: 100% !important;
+}
+#board-wrap .prose, #board-wrap .html-container, #board-wrap .prose * {
+  max-width: none !important;
 }
 #board-wrap .prose, #board-wrap .html-container {
-  display: block;
+  display: block !important;
   width: 100% !important;
-  max-width: 100% !important;
+}
+#board-wrap .stage, #board-wrap .theater, #board-wrap .twin {
+  width: 100% !important;
+}
+#board-wrap .twin {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 28px 32px !important;
+}
+#board-wrap .twin-pane {
+  width: auto !important;
+  flex: 0 0 auto !important;
+  display: block !important;
+}
+#board-wrap .soko-board {
+  width: max-content !important;
 }
 
 #status-line, #status p, #status {
