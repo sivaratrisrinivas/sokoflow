@@ -32,8 +32,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 28px;
-            padding: 48px 20px 56px;
+            gap: 22px;
+            padding: 48px 20px 96px;
         }
 
         .wordmark {
@@ -44,7 +44,16 @@
             color: var(--muted);
         }
 
-        #grid {
+        .kicker {
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .board {
             display: grid;
             grid-template-columns: repeat(8, 44px);
             grid-template-rows: repeat(8, 44px);
@@ -54,9 +63,17 @@
             border-radius: 18px;
         }
 
+        .board.compact {
+            grid-template-columns: repeat(8, 32px);
+            grid-template-rows: repeat(8, 32px);
+            gap: 4px;
+            padding: 8px;
+            border-radius: 16px;
+        }
+
         .cell {
-            width: 44px;
-            height: 44px;
+            width: 100%;
+            height: 100%;
             border-radius: 10px;
             position: relative;
             display: flex;
@@ -73,15 +90,15 @@
 
         .target::after {
             content: "";
-            width: 16px;
-            height: 16px;
+            width: 36%;
+            height: 36%;
             border-radius: 50%;
             background: var(--goal);
         }
 
         .box {
-            width: 30px;
-            height: 30px;
+            width: 68%;
+            height: 68%;
             border-radius: 7px;
             background: var(--box);
             box-shadow: 0 3px 0 rgba(160, 90, 10, 0.28);
@@ -93,11 +110,92 @@
         }
 
         .player {
-            width: 26px;
-            height: 26px;
+            width: 58%;
+            height: 58%;
             border-radius: 50%;
             background: var(--player);
             box-shadow: 0 3px 0 rgba(140, 40, 28, 0.25);
+        }
+
+        .trail::before {
+            content: "";
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--sky);
+        }
+
+        #theater, #twin { display: none; }
+        #theater.open, #twin.open { display: block; }
+        #theater { margin-bottom: 6px; }
+        .t-label {
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+        .action-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            justify-content: center;
+            margin: 8px auto 0;
+            max-width: 340px;
+        }
+        .act {
+            width: 16px;
+            height: 16px;
+            line-height: 16px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .act.dead { color: var(--muted); opacity: 0.35; }
+        .act.bad { color: var(--player); text-decoration: line-through; }
+        .scrub {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        .ticks { display: flex; gap: 5px; }
+        .ticks button {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: none;
+            background: var(--sky);
+            cursor: pointer;
+            padding: 0;
+        }
+        .ticks button.on { background: var(--ink); }
+        .save-clip {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--muted);
+            text-decoration: none;
+        }
+        .save-clip.open { display: block; }
+
+        .twin {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 28px 32px;
+            width: 100%;
+        }
+        .pane { text-align: center; }
+        .pane-status {
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--muted);
         }
 
         .status {
@@ -105,10 +203,20 @@
             font-size: 14px;
             color: var(--muted);
             letter-spacing: 0.01em;
+            text-align: center;
         }
-
         .status.solving { color: var(--ink); }
         .status.solved { color: var(--box-on-goal); }
+
+        .autopsy {
+            display: none;
+            max-width: 440px;
+            text-align: center;
+            font-size: 13px;
+            line-height: 1.55;
+            color: var(--ink);
+        }
+        .autopsy.open { display: block; }
 
         button#btn {
             font-family: inherit;
@@ -148,7 +256,7 @@
         .quiet button:hover { color: var(--ink); }
 
         .honest {
-            max-width: 360px;
+            max-width: 400px;
             text-align: center;
             font-size: 12px;
             line-height: 1.55;
@@ -156,14 +264,15 @@
         }
 
         @media (max-width: 520px) {
-            #grid {
+            .board {
                 grid-template-columns: repeat(8, 34px);
                 grid-template-rows: repeat(8, 34px);
                 gap: 4px;
             }
-            .cell { width: 34px; height: 34px; }
-            .box { width: 22px; height: 22px; }
-            .player { width: 20px; height: 20px; }
+            .board.compact {
+                grid-template-columns: repeat(8, 28px);
+                grid-template-rows: repeat(8, 28px);
+            }
         }
     </style>
 </head>
@@ -171,7 +280,37 @@
 
     <p class="wordmark">SokoFlow</p>
 
-    <div id="grid" aria-label="Sokoban board"></div>
+    <div id="theater">
+        <p class="kicker">Denoise</p>
+        <p class="t-label" id="t-label">noise</p>
+        <div id="theater-board" class="board compact" aria-label="Denoise board"></div>
+        <div class="action-strip" id="action-strip"></div>
+        <div class="scrub" id="scrub" hidden>
+            <span>start</span>
+            <div class="ticks" id="ticks"></div>
+            <span>plan</span>
+        </div>
+        <a class="save-clip" id="save-clip" download="sokoflow-denoise.gif">Save denoise clip</a>
+    </div>
+
+    <div id="twin">
+        <div class="twin">
+            <div class="pane">
+                <p class="kicker">Diffusion</p>
+                <div id="grid-diff" class="board compact" aria-label="Diffusion board"></div>
+                <p class="pane-status" id="status-diff"></p>
+            </div>
+            <div class="pane">
+                <p class="kicker">BFS</p>
+                <div id="grid-bfs" class="board compact" aria-label="BFS board"></div>
+                <p class="pane-status" id="status-bfs"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="grid" class="board" aria-label="Sokoban board"></div>
+
+    <p class="autopsy" id="autopsy"></p>
 
     <div class="status" id="status">A puzzle is ready.</div>
 
@@ -183,7 +322,7 @@
     </div>
 
     <p class="honest">
-        One click runs diffusion on the board above.
+        One click runs denoise theater + a BFS twin on the board above.
         Scramble-hard (2026-09-21): diffusion 6.2% (15/240) vs BFS 94.2% (226/240).
         GS-T5 20.8% is historical — not scramble-hard.
     </p>
@@ -194,7 +333,14 @@
         let localTargets = null;
         let localPath = [];
         let localIndex = 0;
+        let bfsPath = [];
+        let denoiseFrames = [];
+        let autopsyText = '';
+        let diffusionSolved = false;
+        let bfsMeta = {solved: false, status: '', nodes: 0, max_nodes: 30000};
+        let clipHref = null;
         const DELTAS = {UP: [-1, 0], DOWN: [1, 0], LEFT: [0, -1], RIGHT: [0, 1]};
+        const ARROWS = {UP: '↑', DOWN: '↓', LEFT: '←', RIGHT: '→'};
 
         function applyMove(grid, targets, action) {
             const [dr, dc] = DELTAS[action];
@@ -231,7 +377,115 @@
             return grid.every(row => row.every(v => v !== 3));
         }
 
+        function cloneGrid(grid) {
+            return grid.map(row => row.slice());
+        }
+
+        function replayUntilIllegal(start, targets, actions) {
+            let grid = cloneGrid(start);
+            const trail = [];
+            let cut = actions.length;
+            for (let i = 0; i < actions.length; i++) {
+                const next = applyMove(grid, targets, actions[i]);
+                if (!next) { cut = i; break; }
+                grid = next;
+                if (gridSolved(grid)) { cut = i + 1; break; }
+            }
+            return {grid, cut};
+        }
+
+        function walkPath(start, targets, actions) {
+            const frames = [cloneGrid(start)];
+            let grid = cloneGrid(start);
+            for (const action of actions) {
+                const next = applyMove(grid, targets, action);
+                if (!next) break;
+                grid = next;
+                frames.push(cloneGrid(grid));
+            }
+            return frames;
+        }
+
+        function executedDiffusionActions() {
+            if (diffusionSolved) return localPath;
+            const last = denoiseFrames[denoiseFrames.length - 1];
+            return (last && last.actions) || [];
+        }
+
+        function renderInto(container, grid, compact) {
+            container.innerHTML = '';
+            if (compact) container.classList.add('compact');
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const v = grid[r][c];
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if (v === 1) cell.classList.add('wall');
+                    if (v === 4) cell.classList.add('target');
+                    if (v === 3) cell.innerHTML = '<div class="box"></div>';
+                    if (v === 5) { cell.classList.add('target'); cell.innerHTML = '<div class="box on-target"></div>'; }
+                    if (v === 2) {
+                        if (localTargets && localTargets[r][c]) cell.classList.add('target');
+                        cell.innerHTML = '<div class="player"></div>';
+                    }
+                    container.appendChild(cell);
+                }
+            }
+        }
+
+        function renderStrip(actions, cut) {
+            const el = document.getElementById('action-strip');
+            el.innerHTML = '';
+            (actions || []).forEach((action, i) => {
+                const span = document.createElement('span');
+                span.className = 'act';
+                if (i === cut && cut < actions.length) span.classList.add('bad');
+                else if (i > cut) span.classList.add('dead');
+                span.textContent = ARROWS[action] || '?';
+                el.appendChild(span);
+            });
+        }
+
+        function showDenoiseFrame(index) {
+            if (!denoiseFrames.length || !localGrid) return;
+            const i = Math.max(0, Math.min(denoiseFrames.length - 1, index));
+            const frame = denoiseFrames[i];
+            const walked = replayUntilIllegal(localGrid, localTargets, frame.actions || []);
+            const n = denoiseFrames.length;
+            const legalN = frame.legal_n != null ? frame.legal_n : (frame.actions || []).length;
+            const label = i === 0 ? 'start' : (i === n - 1 ? 'plan' : (legalN + ' moves'));
+            document.getElementById('t-label').textContent = label;
+            renderInto(document.getElementById('theater-board'), walked.grid, true);
+            renderStrip(frame.actions || [], (frame.actions || []).length);
+            document.querySelectorAll('#ticks button').forEach((btn, k) => {
+                btn.classList.toggle('on', k === i);
+            });
+        }
+
+        function buildScrubber() {
+            const ticks = document.getElementById('ticks');
+            ticks.innerHTML = '';
+            denoiseFrames.forEach((_, i) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.addEventListener('click', () => showDenoiseFrame(i));
+                ticks.appendChild(btn);
+            });
+            document.getElementById('scrub').hidden = denoiseFrames.length < 2;
+            showDenoiseFrame(denoiseFrames.length - 1);
+        }
+
+        function resetChrome() {
+            document.getElementById('theater').classList.remove('open');
+            document.getElementById('twin').classList.remove('open');
+            document.getElementById('autopsy').classList.remove('open');
+            document.getElementById('save-clip').classList.remove('open');
+            document.getElementById('grid').style.display = '';
+            document.getElementById('scrub').hidden = true;
+        }
+
         async function newGame() {
+            resetChrome();
             setStatus('Preparing…', 'solving');
             const res = await fetch('/api/new_game', {
                 method: 'POST',
@@ -247,30 +501,23 @@
             localTargets = data.targets;
             localPath = data.path || [];
             localIndex = 0;
-            render(data.grid);
-            setStatus(localPath.length ? 'A puzzle is ready.' : 'No path this time — try New puzzle.', '');
-            return Boolean(data.solvable && localPath.length);
-        }
-
-        async function step() {
-            if (localIndex >= localPath.length) {
-                return gridSolved(localGrid) ? 'solved' : 'failed';
-            }
-            const action = localPath[localIndex];
-            const next = applyMove(localGrid, localTargets, action);
-            localIndex += 1;
-            if (next) localGrid = next;
-            render(localGrid);
-            if (gridSolved(localGrid)) return 'solved';
-            setStatus(`${localIndex} / ${localPath.length}`, 'solving');
-            return 'continue';
+            bfsPath = (data.bfs && data.bfs.path) || [];
+            bfsMeta = data.bfs || bfsMeta;
+            denoiseFrames = data.denoise || [];
+            autopsyText = data.autopsy || '';
+            diffusionSolved = Boolean(data.diffusion_solved);
+            clipHref = data.clip_gif || null;
+            renderInto(document.getElementById('grid'), data.grid, false);
+            setStatus('A puzzle is ready.', '');
+            return true;
         }
 
         async function playOnce() {
             if (playing) return;
             playing = true;
             document.getElementById('btn').textContent = 'Playing';
-            if (!localPath.length) {
+            resetChrome();
+            if (!localGrid) {
                 const ok = await newGame();
                 if (!ok) {
                     playing = false;
@@ -278,19 +525,55 @@
                     return;
                 }
             }
-            setStatus('Running diffusion path…', 'solving');
-            while (playing) {
-                const result = await step();
-                if (result === 'solved') {
-                    setStatus('Solved', 'solved');
-                    break;
-                }
-                if (result === 'failed') {
-                    setStatus('Stopped', '');
-                    break;
-                }
-                await sleep(90);
+
+            document.getElementById('grid').style.display = 'none';
+            document.getElementById('theater').classList.add('open');
+            setStatus('Denoising…', 'solving');
+            for (let i = 0; i < denoiseFrames.length; i++) {
+                showDenoiseFrame(i);
+                await sleep(110);
+                if (!playing) return;
             }
+            buildScrubber();
+            if (clipHref) {
+                const a = document.getElementById('save-clip');
+                a.href = clipHref;
+                a.classList.add('open');
+            }
+
+            document.getElementById('twin').classList.add('open');
+            const dWalk = executedDiffusionActions();
+            const dFrames = walkPath(localGrid, localTargets, dWalk);
+            const bFrames = walkPath(localGrid, localTargets, bfsPath);
+            const n = Math.max(dFrames.length, bFrames.length, 1);
+            const dEnd = diffusionSolved
+                ? ('solved · ' + localPath.length + ' moves')
+                : 'failed';
+            const bEnd = bfsMeta.status || (bfsMeta.solved ? 'solved' : 'failed');
+            for (let i = 0; i < n; i++) {
+                const di = Math.min(i, dFrames.length - 1);
+                const bi = Math.min(i, bFrames.length - 1);
+                renderInto(document.getElementById('grid-diff'), dFrames[di], true);
+                renderInto(document.getElementById('grid-bfs'), bFrames[bi], true);
+                document.getElementById('status-diff').textContent =
+                    di === dFrames.length - 1 ? dEnd : (di + ' / ' + Math.max(dFrames.length - 1, 1));
+                document.getElementById('status-bfs').textContent =
+                    bi === bFrames.length - 1 ? bEnd : (bi + ' / ' + Math.max(bFrames.length - 1, 1));
+                setStatus('Comparing…', 'solving');
+                await sleep(90);
+                if (!playing) return;
+            }
+
+            if (!diffusionSolved && autopsyText) {
+                const el = document.getElementById('autopsy');
+                el.textContent = autopsyText;
+                el.classList.add('open');
+            }
+            let head = 'Neither solved';
+            if (diffusionSolved && bfsMeta.solved) head = 'Solved';
+            else if (bfsMeta.solved && !diffusionSolved) head = 'BFS solved — diffusion did not';
+            else if (diffusionSolved && !bfsMeta.solved) head = 'Diffusion solved — BFS did not';
+            setStatus(head, diffusionSolved ? 'solved' : '');
             playing = false;
             document.getElementById('btn').textContent = 'Play';
         }
@@ -309,27 +592,6 @@
 
         function sleep(ms) {
             return new Promise(r => setTimeout(r, ms));
-        }
-
-        function render(grid) {
-            const container = document.getElementById('grid');
-            container.innerHTML = '';
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    const v = grid[r][c];
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    if (v === 1) cell.classList.add('wall');
-                    if (v === 4) cell.classList.add('target');
-                    if (v === 3) cell.innerHTML = '<div class="box"></div>';
-                    if (v === 5) { cell.classList.add('target'); cell.innerHTML = '<div class="box on-target"></div>'; }
-                    if (v === 2) {
-                        if (localTargets && localTargets[r][c]) cell.classList.add('target');
-                        cell.innerHTML = '<div class="player"></div>';
-                    }
-                    container.appendChild(cell);
-                }
-            }
         }
 
         newGame();

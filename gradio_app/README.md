@@ -12,10 +12,10 @@ pinned: false
 
 # SokoFlow
 
-CPU diffusion demo for 8×8 Sokoban. A puzzle is on the board at load; **Play** runs diffusion (≤2 clicks from load; shipped as 1).
+CPU diffusion demo for 8×8 Sokoban. A puzzle is on the board at load; **Play** runs Denoise Theater + a BFS twin (≤2 clicks from load; shipped as 1). If diffusion fails, the UI says why.
 
 Colorful pieces (wall / floor / box / goal / player / box-on-goal). Chrome is cream, not a Gradio control stack.
 
-Headline eval is **scramble-hard**, not the historical GS-T5 20.8%. Microban OOD is a separate table.
+Headline eval is **scramble-hard**, not the historical GS-T5 20.8%. Microban OOD is a separate table. BFS is shown honestly.
 
 Repo source of truth: `gradio_app/` in [sivaratrisrinivas/sokoflow](https://github.com/sivaratrisrinivas/sokoflow).

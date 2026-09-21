@@ -48,6 +48,9 @@ def test_index_renders(client):
     assert b"Play" in response.data
     assert b"6.2%" in response.data
     assert b"20.8%" in response.data
+    assert b"id=\"theater\"" in response.data
+    assert b"id=\"twin\"" in response.data
+    assert b"id=\"autopsy\"" in response.data
     assert b"--wall:" in response.data or b"var(--wall)" in response.data
     assert b"#C4A574" in response.data
     assert b"#E39B2D" in response.data
@@ -93,12 +96,40 @@ def test_solve_and_new_game_use_separate_buckets(client, monkeypatch):
     monkeypatch.setenv("RATE_LIMIT_PER_MINUTE", "1")
     monkeypatch.setenv("NEW_GAME_RATE_LIMIT_PER_MINUTE", "5")
     monkeypatch.setattr("app.diffusion_solve_fast", lambda *args, **kwargs: ["RIGHT"])
+    monkeypatch.setattr(
+        "app.diffusion_solve_report",
+        lambda *args, **kwargs: {
+            "solved": True,
+            "path": ["RIGHT"],
+            "denoise_frames": [],
+            "autopsy": "",
+            "reason": "solved",
+        },
+    )
+    monkeypatch.setattr(
+        "app.bfs_solve_report",
+        lambda *args, **kwargs: {
+            "solved": True,
+            "path": ["RIGHT"],
+            "nodes": 2,
+            "max_nodes": 30000,
+            "budget_exhausted": False,
+            "status": "solved · 1 moves · 2 nodes",
+        },
+    )
+    monkeypatch.setattr("app.denoise_gif_data_uri", lambda *args, **kwargs: None)
     board = _board()
     assert client.post("/api/solve", json=board).status_code == 200
     assert client.post("/api/solve", json=board).status_code == 429
     demo = client.post("/api/new_game", json={"difficulty": 8})
     assert demo.status_code == 200
-    assert demo.get_json()["solvable"] is True
+    payload = demo.get_json()
+    assert payload["solvable"] is True
+    assert payload["diffusion_solved"] is True
+    assert payload["path"] == ["RIGHT"]
+    assert payload["moves"] == 1
+    assert payload["bfs"]["solved"] is True
+    assert payload["denoise"] == []
 
 
 def test_rate_limit_ignores_x_forwarded_for_without_trust_proxy(client, monkeypatch):
@@ -121,6 +152,90 @@ def test_rate_limit_uses_x_forwarded_for_when_trust_proxy_set(client, monkeypatc
     second = client.post("/api/solve", json=board, headers={"X-Forwarded-For": "8.8.8.8"})
     assert first.status_code == 200
     assert second.status_code == 200
+
+
+def _fake_bfs(*, solved=True, path=None):
+    path = path if path is not None else (["RIGHT"] if solved else [])
+    return {
+        "solved": solved,
+        "path": path,
+        "nodes": 2,
+        "max_nodes": 30000,
+        "budget_exhausted": False,
+        "status": "solved · 1 moves · 2 nodes" if solved else "failed · no path · 2 nodes",
+    }
+
+
+def test_new_game_unsolved_returns_empty_path_keeps_denoise_and_flag(client, monkeypatch):
+    prefix = ["RIGHT", "UP"]
+    monkeypatch.setattr(
+        "app.diffusion_solve_report",
+        lambda *args, **kwargs: {
+            "solved": False,
+            "path": prefix,
+            "denoise_frames": [
+                {"t": 100, "actions": [], "legal_n": 0, "first_illegal": None},
+                {"t": 0, "actions": prefix, "legal_n": 2, "first_illegal": None},
+            ],
+            "autopsy": "Legal prefix: 2 move(s).",
+            "reason": "exhausted_iters",
+        },
+    )
+    monkeypatch.setattr("app.bfs_solve_report", lambda *args, **kwargs: _fake_bfs())
+    monkeypatch.setattr("app.denoise_gif_data_uri", lambda *args, **kwargs: None)
+    response = client.post("/api/new_game", json={"difficulty": 8})
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["solvable"] is False
+    assert payload["diffusion_solved"] is False
+    assert payload["path"] == []
+    assert payload["moves"] == 0
+    assert payload["denoise"][-1]["actions"] == prefix
+    assert payload["denoise"][-1]["legal_n"] == 2
+    assert "Legal prefix" in payload["autopsy"]
+
+    step = client.post("/api/solve_step")
+    assert step.status_code == 200
+    body = step.get_json()
+    assert body["gave_up"] is True
+    assert body["solved"] is False
+    assert body["action"] == "GIVE_UP"
+
+
+def test_new_game_solved_still_returns_executed_path(client, monkeypatch):
+    path = ["RIGHT"]
+    monkeypatch.setattr(
+        "app.diffusion_solve_report",
+        lambda *args, **kwargs: {
+            "solved": True,
+            "path": path,
+            "denoise_frames": [
+                {"t": 100, "actions": [], "legal_n": 0, "first_illegal": None},
+                {"t": 0, "actions": path, "legal_n": 1, "first_illegal": None},
+            ],
+            "autopsy": "",
+            "reason": "solved",
+        },
+    )
+    monkeypatch.setattr("app.bfs_solve_report", lambda *args, **kwargs: _fake_bfs(path=path))
+    monkeypatch.setattr("app.denoise_gif_data_uri", lambda *args, **kwargs: None)
+    response = client.post("/api/new_game", json={"difficulty": 8})
+    payload = response.get_json()
+    assert payload["solvable"] is True
+    assert payload["diffusion_solved"] is True
+    assert payload["path"] == path
+    assert payload["moves"] == 1
+    assert payload["denoise"][-1]["actions"] == path
+
+
+def test_solve_unsolved_returns_null_path(client, monkeypatch):
+    monkeypatch.setattr("app.diffusion_solve_fast", lambda *args, **kwargs: None)
+    response = client.post("/api/solve", json=_board())
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["path"] is None
+    assert payload["solved"] is False
+    assert payload["moves"] == 0
 
 
 def test_is_solved_and_valid_move_helpers():

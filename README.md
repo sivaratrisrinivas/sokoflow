@@ -2,15 +2,15 @@
 
 A small **CPU** diffusion model that emits Sokoban action sequences on **8×8** boards. It is a research demo, not a warehouse robot and not SOTA.
 
-**Flow** here means the denoising process: random moves → a candidate solution.
+**Flow** here means the denoising process: random moves → a candidate solution. **Play** makes that visible (Denoise Theater) and puts a BFS twin next to it.
 
 The live board is **colorful** (wall / floor / box / goal / player / box-on-goal). Chrome is cream, not grayscale.
 
 ## What
 
-SokoFlow trains a CNN + transformer denoiser on reverse-scrambled Sokoban trajectories, then samples action sequences with DDIM. A Flask UI and a Gradio Space can show a scrambled board; **Play** runs the diffusion path.
+SokoFlow trains a CNN + transformer denoiser on reverse-scrambled Sokoban trajectories, then samples action sequences with DDIM. A Flask UI and a Gradio Space show a scrambled board; **Play** (1 click) runs Denoise Theater, then a BFS twin and — if diffusion fails — an autopsy. It does **not** hide that BFS is stronger.
 
-It does **not** search like BFS. Headline **scramble-hard** solve rate is far below a 30k-node BFS baseline.
+Demo UI (GS-T48): theater auto-plays the **executed legal path** the solver actually ran (same prefix as the Diffusion twin and the autopsy). Scrub ticks and the saved GIF are prefixes of that path, not a disagreeing iteration-0 DDIM sample. The BFS twin reports solved/failed and node budget. Failures name the first illegal move, a stuck push, or exhausted iterations. HTTP `path` from `/api/new_game` is empty when `diffusion_solved` is false — do not treat a legal prefix as success. Gate UI on `diffusion_solved`. No invented rates.
 
 ## Why
 
@@ -20,7 +20,7 @@ Image diffusion maps noise to pixels. This project asks whether the same idea ca
 
 1. **Data.** `sokoban_data_gen.py` reverse-scrambles a solved 8×8 board, then BFS-solves it. Training keeps trajectories with `len(traj) >= 5`. As of GS-T47 it also drops `boxes_off_target < 2` for **future** datasets. Committed weights `sokoban_diffusion.pth` were trained with the length gate only.
 2. **Train.** `sokoban_diffusion.py` learns to denoise length-20 action sequences conditioned on a 6-channel board encoding.
-3. **Infer.** `sokoban_solve.diffusion_solve_fast` runs 10-step DDIM, 4 samples per iteration, up to 20 iterations, and executes only legal moves.
+3. **Infer.** `sokoban_solve.diffusion_solve_fast` runs 10-step DDIM, 4 samples per iteration, up to 20 iterations, and executes only legal moves. The demo uses `diffusion_solve_report` so the UI can show denoise frames and an honest failure reason.
 4. **Eval.** `eval/measure_solve_rate.py` supports three protocols. **Headline is scramble-hard.** Historical GS-T5 is kept labeled historical. Microban is a separate OOD table and is never mixed in.
 
 ## Quick Start
@@ -40,7 +40,7 @@ python app.py
 pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
-Open http://localhost:5000. A puzzle is already on the board. **Play** starts the diffusion path (Firstmate bar: ≤2 clicks from load; this demo ships 1). First request loads PyTorch + 3.7MB weights; cold start can take tens of seconds on a tiny dyno.
+Open http://localhost:5000. A puzzle is already on the board. **Play** starts Denoise Theater, then a BFS twin (Firstmate bar: ≤2 clicks from load; this demo ships 1). First request loads PyTorch + 3.7MB weights; cold start can take tens of seconds on a tiny dyno.
 
 ### Docker
 
@@ -55,7 +55,7 @@ Or: `docker compose up --build`
 
 ### Gradio / Hugging Face Space
 
-Source of truth: `gradio_app/`. Firstmate bar is ≤2 clicks from load; shipped path is 1: load shows a puzzle, **Play** runs diffusion.
+Source of truth: `gradio_app/`. Firstmate bar is ≤2 clicks from load; shipped path is 1: load shows a puzzle, **Play** runs denoise theater + BFS twin. Failure autopsy is shown when diffusion does not solve. A short GIF of the denoise run is offered as “Save denoise clip” after Play (no extra setup click).
 
 ```bash
 pip install -r gradio_app/requirements.txt
@@ -156,7 +156,7 @@ The single diffusion win is Microban 44 ("Duh!"), a 5×3 one-push puzzle. JSON: 
 |---|---|---|
 | GET | `/health` | Liveness + whether weights loaded |
 | GET | `/` | UI — puzzle loaded; Play runs the path |
-| POST | `/api/new_game` | Scramble + solve. JSON body optional `{difficulty: int}` |
+| POST | `/api/new_game` | Scramble + solve. `path` is `[]` when `diffusion_solved`/`solvable` is false; denoise frames still hold executed prefixes. JSON body optional `{difficulty: int}` |
 | POST | `/api/solve` | Stateless solve. Body `{grid, targets}` 8×8 |
 | POST | `/api/solve_step` | Playback using `sokoflow_sid` cookie |
 
@@ -167,14 +167,15 @@ Guards: `MAX_CONTENT_LENGTH` default 16KiB; `RATE_LIMIT_PER_MINUTE` default 30 o
 | Path | Role |
 |---|---|
 | `app.py` | Flask app, health, CORS, rate limit |
-| `sokoban_solve.py` | Shared CPU diffusion solve path |
-| `sokoban_render.py` | Colorful board HTML/CSS |
-| `sokoban_diffusion.py` | Model + training |
+| `sokoban_solve.py` | Shared CPU diffusion solve path, BFS twin report, autopsy |
+| `sokoban_render.py` | Colorful board HTML/CSS + denoise/twin stage |
+| `sokoban_clip.py` | Tiny GIF encoder for a denoise clip |
+| `sokoban_diffusion.py` | Model + training (includes DDIM trace) |
 | `sokoban_engine.py` | Game rules |
 | `sokoban_data_gen.py` | Dataset + BFS |
 | `sokoban_diffusion.pth` | Committed CPU weights (3.7MB) |
 | `eval/measure_solve_rate.py` | GS-T5 / scramble-hard / Microban harness |
-| `gradio_app/` | HF Space source of truth (≤2 clicks; ships 1-click Play) |
+| `gradio_app/` | HF Space source of truth (≤2 clicks; ships 1-click Play → theater + twin) |
 | `tests/` | Engine, actions, weight load, eval smoke, API guards |
 | `Dockerfile` / `docker-compose.yml` | One-command Flask UI |
 

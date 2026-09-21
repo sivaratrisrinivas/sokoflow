@@ -5,7 +5,8 @@ Source of truth for https://huggingface.co/spaces/Srini410/sokoflow
 
 UX bar (Firstmate, provisional): core objective in ≤2 clicks from load.
 Exact N may update later. Shipped path is 1 click: a default puzzle is
-already on the board; Play runs diffusion. No setup tabs, no second confirm.
+already on the board; Play runs denoise theater + BFS twin. No setup tabs,
+no second confirm.
 """
 
 from __future__ import annotations
@@ -32,9 +33,15 @@ for candidate in (ROOT / "sokoban_diffusion.pth", PARENT / "sokoban_diffusion.pt
 
 import gradio as gr
 
+from sokoban_clip import denoise_gif_data_uri
 from sokoban_engine import SokobanEnv
-from sokoban_render import board_html, empty_board_html
-from sokoban_solve import diffusion_solve_fast, ensure_model_loaded, is_solved, is_valid_move, model_error
+from sokoban_render import compose_stage, empty_board_html
+from sokoban_solve import (
+    bfs_solve_report,
+    diffusion_solve_report,
+    ensure_model_loaded,
+    walk_path_frames,
+)
 
 try:
     import spaces
@@ -70,10 +77,19 @@ html, body, .gradio-container, .main, .contain {
 }
 
 .gradio-container {
-  max-width: 640px !important;
+  max-width: 760px !important;
   margin: 0 auto !important;
   padding: 64px 20px 80px !important;
   min-height: 100vh;
+}
+
+.gradio-container .block {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+.gradio-container .html-container {
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 footer, .footer, .built-with,
@@ -98,10 +114,32 @@ footer, .footer, .built-with,
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+#board-wrap .prose, #board-wrap .html-container, #board-wrap .prose * {
+  max-width: none !important;
 }
 #board-wrap .prose, #board-wrap .html-container {
-  display: flex;
-  justify-content: center;
+  display: block !important;
+  width: 100% !important;
+}
+#board-wrap .stage, #board-wrap .theater, #board-wrap .twin {
+  width: 100% !important;
+}
+#board-wrap .twin {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 28px 32px !important;
+}
+#board-wrap .twin-pane {
+  width: auto !important;
+  flex: 0 0 auto !important;
+  display: block !important;
+}
+#board-wrap .soko-board {
+  width: max-content !important;
 }
 
 #status-line, #status p, #status {
@@ -144,8 +182,13 @@ footer, .footer, .built-with,
   color: var(--muted);
   font-size: 12px;
   line-height: 1.55;
-  max-width: 340px;
+  max-width: 400px;
   margin: 28px auto 0;
+}
+
+.save-clip {
+  color: #8A847A !important;
+  text-decoration: none !important;
 }
 
 .block, .label-wrap, .empty { border: none !important; box-shadow: none !important; }
@@ -186,67 +229,128 @@ def scramble_puzzle(seed: int | None = None) -> dict[str, Any]:
     return {"grid": grid, "targets": targets, "start_grid": grid.copy()}
 
 
-def render_state(state: dict[str, Any]) -> str:
+def render_solo(state: dict[str, Any]) -> str:
     if state.get("grid") is None:
         return empty_board_html()
-    return board_html(state["grid"], state["targets"])
+    return compose_stage(mode="single", grid=state["grid"], targets=state["targets"])
 
 
 @spaces.GPU(duration=120)
-def _solve(grid, targets):
-    return diffusion_solve_fast(grid, targets, max_iters=20)
+def _compute(grid, targets):
+    report = diffusion_solve_report(grid, targets, max_iters=20, trace=True)
+    bfs = bfs_solve_report(grid, targets, max_nodes=30000)
+    return report, bfs
 
 
 def status_html(text: str) -> str:
     return f'<p id="status-line">{text}</p>'
 
 
+def headline(report: dict, bfs: dict) -> str:
+    if report["solved"] and bfs["solved"]:
+        return "Solved"
+    if bfs["solved"] and not report["solved"]:
+        return "BFS solved — diffusion did not"
+    if report["solved"] and not bfs["solved"]:
+        return "Diffusion solved — BFS did not"
+    return "Neither solved"
+
+
 def load_default():
     ensure_model_loaded()
     state = scramble_puzzle(seed=DEFAULT_SEED)
-    return render_state(state), status_html("A puzzle is ready."), state
+    return render_solo(state), status_html("A puzzle is ready."), state
 
 
 def new_puzzle(_state):
     state = scramble_puzzle(seed=None)
-    return render_state(state), status_html("A puzzle is ready."), state
+    return render_solo(state), status_html("A puzzle is ready."), state
 
 
 def play(state: dict[str, Any]):
     if not state or state.get("grid") is None:
         state = scramble_puzzle(seed=DEFAULT_SEED)
-        yield render_state(state), status_html("A puzzle is ready."), state
+        yield render_solo(state), status_html("A puzzle is ready."), state
         return
 
     grid = np.array(state["start_grid"] if state.get("start_grid") is not None else state["grid"], dtype=int)
     targets = np.array(state["targets"], dtype=bool)
     state["grid"] = grid.copy()
-    yield render_state(state), status_html("Running diffusion…"), state
+    yield render_solo(state), status_html("Running diffusion…"), state
 
-    if not ensure_model_loaded():
-        yield render_state(state), status_html(f"Model not loaded: {model_error()}"), state
-        return
+    report, bfs = _compute(grid, targets)
+    frames = report.get("denoise_frames") or []
+    clip = denoise_gif_data_uri(frames, targets) if frames else None
 
-    path = _solve(grid, targets)
-    if not path:
-        yield render_state(state), status_html("No path this time — expected on scramble-hard boards."), state
-        return
-
-    current = grid.copy()
-    for i, action in enumerate(path, start=1):
-        pos = tuple(map(int, np.argwhere(current == 2)[0]))
-        nxt, _ = is_valid_move(current, targets, pos, action)
-        if nxt is None:
-            state["grid"] = current
-            yield render_state(state), status_html(f"Stopped at {i - 1}/{len(path)}"), state
-            return
-        current = nxt
-        state["grid"] = current
-        yield render_state(state), status_html(f"{i} / {len(path)}"), state
+    for i in range(len(frames)):
+        yield (
+            compose_stage(
+                mode="denoise",
+                grid=grid,
+                targets=targets,
+                theater_frames=frames,
+                theater_index=i,
+                theater_interactive=False,
+            ),
+            status_html("Denoising…"),
+            state,
+        )
         time.sleep(0.11)
 
-    note = "Solved" if is_solved(current) else "Finished"
-    yield render_state(state), status_html(note), state
+    d_play = walk_path_frames(grid, targets, report.get("path") or [])
+    b_play = walk_path_frames(grid, targets, bfs.get("path") or [])
+    n = max(len(d_play), len(b_play), 1)
+    d_end = "solved · {} moves".format(len(report.get("path") or [])) if report["solved"] else "failed"
+    if not report["solved"] and report.get("iters_used"):
+        d_end = f"failed · {report['iters_used']} iters"
+
+    for i in range(n):
+        di = min(i, len(d_play) - 1)
+        bi = min(i, len(b_play) - 1)
+        d_status = d_end if di == len(d_play) - 1 else f"{di} / {max(len(d_play) - 1, 1)}"
+        b_status = bfs["status"] if bi == len(b_play) - 1 else f"{bi} / {max(len(b_play) - 1, 1)}"
+        yield (
+            compose_stage(
+                mode="twin",
+                grid=grid,
+                targets=targets,
+                theater_frames=frames,
+                theater_index=len(frames) - 1 if frames else None,
+                theater_interactive=False,
+                diffusion_grid=d_play[di]["grid"],
+                bfs_grid=b_play[bi]["grid"],
+                diffusion_status=d_status,
+                bfs_status=b_status,
+                diffusion_trail=d_play[di]["trail"],
+                bfs_trail=b_play[bi]["trail"],
+            ),
+            status_html("Comparing…"),
+            state,
+        )
+        time.sleep(0.09)
+
+    state["grid"] = d_play[-1]["grid"]
+    autopsy = "" if report["solved"] else (report.get("autopsy") or "")
+    yield (
+        compose_stage(
+            mode="twin",
+            grid=grid,
+            targets=targets,
+            theater_frames=frames,
+            theater_index=len(frames) - 1 if frames else None,
+            theater_interactive=bool(frames),
+            clip_href=clip,
+            diffusion_grid=d_play[-1]["grid"],
+            bfs_grid=b_play[-1]["grid"],
+            diffusion_status=d_end,
+            bfs_status=bfs["status"],
+            diffusion_trail=d_play[-1]["trail"],
+            bfs_trail=b_play[-1]["trail"],
+            autopsy=autopsy,
+        ),
+        status_html(headline(report, bfs)),
+        state,
+    )
 
 
 with gr.Blocks(title="SokoFlow", theme=THEME, css=CSS, analytics_enabled=False) as demo:
@@ -257,7 +361,7 @@ with gr.Blocks(title="SokoFlow", theme=THEME, css=CSS, analytics_enabled=False) 
     btn_play = gr.Button("Play", variant="primary", elem_id="play")
     btn_new = gr.Button("New puzzle", elem_id="quiet-new")
     gr.HTML(
-        '<p id="honest">One click runs diffusion on the board above. '
+        '<p id="honest">One click runs denoise theater + a BFS twin on the board above. '
         "Scramble-hard: 6.2% (15/240) vs BFS 94.2%. GS-T5 20.8% is historical.</p>"
     )
 

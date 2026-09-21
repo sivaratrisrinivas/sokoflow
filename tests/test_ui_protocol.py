@@ -45,7 +45,9 @@ def test_scramble_hard_default_write_is_dated():
 def test_gradio_core_objective_within_two_clicks():
     """Firstmate provisional bar: ≤2 clicks from load. Exact N may update later.
 
-    Shipped path is 1: demo.load puts a puzzle on the board; Play runs diffusion.
+    Shipped path is 1: demo.load puts a puzzle on the board; Play runs
+    denoise theater + BFS twin. No setup tabs. Scrub is HTML inside the
+    stage after Play, not a Gradio setup slider.
     """
     text = (ROOT / "gradio_app" / "app.py").read_text(encoding="utf-8")
     assert 'gr.Button("Play"' in text
@@ -53,8 +55,45 @@ def test_gradio_core_objective_within_two_clicks():
     assert "gr.Slider" not in text
     assert "gr.Tab" not in text
     assert text.count("gr.Button(") == 2  # Play + optional New; New is not required
+    assert "denoise theater" in text.lower() or "Denoise" in text
+    assert "bfs_solve_report" in text
+    assert "diffusion_solve_report" in text
     flask = (ROOT / "templates" / "index.html").read_text(encoding="utf-8")
     assert 'id="btn">Play</button>' in flask
     assert "newGame();" in flask
     assert "playOnce()" in flask
     assert "onclick=\"playOnce()\"" in flask
+    assert 'id="theater"' in flask
+    assert 'id="twin"' in flask
+    assert 'id="autopsy"' in flask
+
+
+def test_gradio_play_model_miss_still_renders_twin():
+    """Match Flask: missing weights still show BFS + an honest why, not a bare status line."""
+    text = (ROOT / "gradio_app" / "app.py").read_text(encoding="utf-8")
+    play = text.split("def play(")[1].split("\nwith gr.Blocks")[0]
+    assert "_compute(" in play
+    assert 'mode="twin"' in play
+    assert "compose_stage(" in play
+    assert 'status_html(f"Model not loaded:' not in play
+    assert "bfs_solve_report" in text
+
+
+def test_flask_play_resets_chrome_each_play():
+    flask = (ROOT / "templates" / "index.html").read_text(encoding="utf-8")
+    start = flask.index("async function playOnce()")
+    body = flask[start : flask.index("async function freshPuzzle()")]
+    assert "resetChrome()" in body
+    assert body.index("resetChrome()") < body.index("theater').classList.add('open'")
+
+
+def test_flask_gates_success_on_diffusion_solved_not_path():
+    flask = (ROOT / "templates" / "index.html").read_text(encoding="utf-8")
+    assert "diffusionSolved = Boolean(data.diffusion_solved)" in flask
+    assert "function executedDiffusionActions()" in flask
+    start = flask.index("async function playOnce()")
+    body = flask[start : flask.index("async function freshPuzzle()")]
+    assert "executedDiffusionActions()" in body
+    assert "walkPath(localGrid, localTargets, localPath)" not in body
+    assert "diffusionSolved" in body
+    assert "const dWalk = executedDiffusionActions()" in body
