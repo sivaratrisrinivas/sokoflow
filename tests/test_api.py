@@ -48,6 +48,9 @@ def test_index_renders(client):
     assert b"Play" in response.data
     assert b"6.2%" in response.data
     assert b"20.8%" in response.data
+    assert b"id=\"theater\"" in response.data
+    assert b"id=\"twin\"" in response.data
+    assert b"id=\"autopsy\"" in response.data
     assert b"--wall:" in response.data or b"var(--wall)" in response.data
     assert b"#C4A574" in response.data
     assert b"#E39B2D" in response.data
@@ -93,12 +96,37 @@ def test_solve_and_new_game_use_separate_buckets(client, monkeypatch):
     monkeypatch.setenv("RATE_LIMIT_PER_MINUTE", "1")
     monkeypatch.setenv("NEW_GAME_RATE_LIMIT_PER_MINUTE", "5")
     monkeypatch.setattr("app.diffusion_solve_fast", lambda *args, **kwargs: ["RIGHT"])
+    monkeypatch.setattr(
+        "app.diffusion_solve_report",
+        lambda *args, **kwargs: {
+            "solved": True,
+            "path": ["RIGHT"],
+            "denoise_frames": [],
+            "autopsy": "",
+            "reason": "solved",
+        },
+    )
+    monkeypatch.setattr(
+        "app.bfs_solve_report",
+        lambda *args, **kwargs: {
+            "solved": True,
+            "path": ["RIGHT"],
+            "nodes": 2,
+            "max_nodes": 30000,
+            "budget_exhausted": False,
+            "status": "solved · 1 moves · 2 nodes",
+        },
+    )
+    monkeypatch.setattr("app.denoise_gif_data_uri", lambda *args, **kwargs: None)
     board = _board()
     assert client.post("/api/solve", json=board).status_code == 200
     assert client.post("/api/solve", json=board).status_code == 429
     demo = client.post("/api/new_game", json={"difficulty": 8})
     assert demo.status_code == 200
-    assert demo.get_json()["solvable"] is True
+    payload = demo.get_json()
+    assert payload["solvable"] is True
+    assert payload["bfs"]["solved"] is True
+    assert payload["denoise"] == []
 
 
 def test_rate_limit_ignores_x_forwarded_for_without_trust_proxy(client, monkeypatch):

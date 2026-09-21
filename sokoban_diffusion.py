@@ -245,41 +245,43 @@ class SokobanDiffusion(nn.Module):
         return actions
 
     @torch.no_grad()
+    def sample_fast_trace(self, board_state, steps=10):
+        """
+        DDIM sampling that also returns argmax actions after each step.
+
+        Frame 0 is pure noise (before any denoise). Later frames are labeled
+        with the diffusion timestep that was just applied. The last frame is
+        the same tensor ``sample_fast`` would return.
+        """
+        device = board_state.device
+        batch_size = board_state.shape[0]
+
+        x = torch.randn(batch_size, self.seq_len, 4, device=device)
+        step_size = self.timesteps // steps
+        timesteps = list(range(self.timesteps - 1, -1, -step_size))[:steps]
+
+        traces = [{"t": int(self.timesteps), "actions": torch.argmax(x, dim=-1).detach().cpu()}]
+
+        for i, t in enumerate(timesteps):
+            t_batch = torch.full((batch_size,), t, device=device, dtype=torch.float)
+            predicted_noise = self.denoiser(x, t_batch, board_state)
+            alpha_t = self.alphas_cumprod[t]
+            alpha_prev = self.alphas_cumprod[timesteps[i + 1]] if i < len(timesteps) - 1 else torch.tensor(1.0)
+            x0_pred = (x - torch.sqrt(1 - alpha_t) * predicted_noise) / torch.sqrt(alpha_t)
+            dir_xt = torch.sqrt(1 - alpha_prev) * predicted_noise
+            x = torch.sqrt(alpha_prev) * x0_pred + dir_xt
+            traces.append({"t": int(t), "actions": torch.argmax(x, dim=-1).detach().cpu()})
+
+        return traces[-1]["actions"].to(device=device), traces
+
+    @torch.no_grad()
     def sample_fast(self, board_state, steps=10):
         """
         Fast DDIM-style sampling with fewer steps.
         Uses deterministic updates to skip timesteps.
         """
-        device = board_state.device
-        batch_size = board_state.shape[0]
-        
-        # Start with noise
-        x = torch.randn(batch_size, self.seq_len, 4, device=device)
-        
-        # Subsample timesteps (e.g., [90, 80, 70, ..., 10, 0] for steps=10)
-        step_size = self.timesteps // steps
-        timesteps = list(range(self.timesteps - 1, -1, -step_size))[:steps]
-        
-        for i, t in enumerate(timesteps):
-            t_batch = torch.full((batch_size,), t, device=device, dtype=torch.float)
-            
-            # Predict noise
-            predicted_noise = self.denoiser(x, t_batch, board_state)
-            
-            # DDIM update (deterministic)
-            alpha_t = self.alphas_cumprod[t]
-            alpha_prev = self.alphas_cumprod[timesteps[i + 1]] if i < len(timesteps) - 1 else torch.tensor(1.0)
-            
-            # Predicted x0
-            x0_pred = (x - torch.sqrt(1 - alpha_t) * predicted_noise) / torch.sqrt(alpha_t)
-            
-            # Direction pointing to x_t
-            dir_xt = torch.sqrt(1 - alpha_prev) * predicted_noise
-            
-            # DDIM step
-            x = torch.sqrt(alpha_prev) * x0_pred + dir_xt
-        
-        return torch.argmax(x, dim=-1)
+        actions, _traces = self.sample_fast_trace(board_state, steps=steps)
+        return actions
 
 
 # ============== TRAINING ==============

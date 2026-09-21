@@ -17,9 +17,12 @@ import numpy as np
 from flask import Flask, jsonify, make_response, render_template, request
 from flask_cors import CORS
 
+from sokoban_clip import denoise_gif_data_uri
 from sokoban_engine import SokobanEnv
 from sokoban_solve import (
+    bfs_solve_report,
     diffusion_solve_fast,
+    diffusion_solve_report,
     ensure_model_loaded,
     is_solved,
     is_valid_move,
@@ -251,24 +254,47 @@ def new_game():
     difficulty = max(1, min(difficulty, 80))
 
     env = SokobanEnv(num_boxes=3)
-    solution_path = []
-    for _attempt in range(5):
-        env.reset_solved()
-        for _ in range(difficulty):
-            env.step_reverse()
-        solution_path = diffusion_solve_fast(env.grid, env.targets)
-        if solution_path:
-            break
-        difficulty = max(8, difficulty - 4)
+    env.reset_solved()
+    for _ in range(difficulty):
+        env.step_reverse()
+
+    report = diffusion_solve_report(env.grid, env.targets, max_iters=20, trace=True)
+    bfs = bfs_solve_report(env.grid, env.targets, max_nodes=30000)
+    solution_path = report.get("path") or []
+    frames = [
+        {
+            "t": frame["t"],
+            "actions": frame["actions"],
+            "legal_n": frame["legal_n"],
+            "first_illegal": frame["first_illegal"],
+        }
+        for frame in report.get("denoise_frames") or []
+    ]
+    clip = None
+    if report.get("denoise_frames"):
+        clip = denoise_gif_data_uri(report["denoise_frames"], env.targets)
 
     sid = _store_session(env, solution_path)
     return _json(
         {
             "grid": env.grid,
             "targets": env.targets,
-            "solvable": bool(solution_path is not None),
-            "moves": len(solution_path) if solution_path else 0,
-            "path": solution_path or [],
+            "solvable": bool(report.get("solved")),
+            "moves": len(solution_path),
+            "path": solution_path,
+            "diffusion_solved": bool(report.get("solved")),
+            "diffusion_reason": report.get("reason"),
+            "autopsy": "" if report.get("solved") else (report.get("autopsy") or ""),
+            "denoise": frames,
+            "clip_gif": clip,
+            "bfs": {
+                "solved": bfs["solved"],
+                "path": bfs["path"],
+                "nodes": bfs["nodes"],
+                "max_nodes": bfs["max_nodes"],
+                "budget_exhausted": bfs["budget_exhausted"],
+                "status": bfs["status"],
+            },
         },
         session_id=sid,
     )

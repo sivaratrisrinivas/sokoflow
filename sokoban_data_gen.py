@@ -171,31 +171,50 @@ def is_valid_move(grid, targets, pos, action_idx):
     return None, None
 
 
-def bfs_solve(grid, targets, max_nodes=30000):
-    """BFS to find optimal solution path."""
+def bfs_solve_report(grid, targets, max_nodes=30000):
+    """BFS with honest node-budget accounting. Path is action indices or None."""
     start = grid.copy()
     start_pos = tuple(map(int, np.argwhere(start == 2)[0]))
-    
+
     queue = deque([(start, start_pos, [])])
     visited = {start.tobytes()}
-    
-    while queue and len(visited) < max_nodes:
-        g, pos, path = queue.popleft()
-        
+    path = None
+    budget_exhausted = False
+
+    while queue:
+        if len(visited) >= max_nodes:
+            budget_exhausted = True
+            break
+
+        g, pos, path_so_far = queue.popleft()
+
         if np.count_nonzero(g == 3) == 0:
-            return path
-        
+            path = path_so_far
+            budget_exhausted = False
+            break
+
         for action_idx in range(4):
             ng, new_pos = is_valid_move(g, targets, pos, action_idx)
             if ng is None:
                 continue
-            
+
             h = ng.tobytes()
             if h not in visited:
                 visited.add(h)
-                queue.append((ng, new_pos, path + [action_idx]))
-    
-    return None
+                queue.append((ng, new_pos, path_so_far + [action_idx]))
+
+    return {
+        "path": path,
+        "solved": path is not None,
+        "nodes": int(len(visited)),
+        "max_nodes": int(max_nodes),
+        "budget_exhausted": bool(budget_exhausted and path is None),
+    }
+
+
+def bfs_solve(grid, targets, max_nodes=30000):
+    """BFS to find optimal solution path (action indices), or None."""
+    return bfs_solve_report(grid, targets, max_nodes=max_nodes)["path"]
 
 
 def generate_trajectory(env, scramble_steps):
