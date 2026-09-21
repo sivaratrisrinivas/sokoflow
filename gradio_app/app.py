@@ -3,8 +3,9 @@ SokoFlow — Hugging Face Gradio Space (CPU).
 
 Source of truth for https://huggingface.co/spaces/Srini410/sokoflow
 
-Captain lock: a default puzzle is on the board at load. One Play click
-runs diffusion on that board. No setup tabs, no second confirm.
+UX bar (Firstmate, provisional): core objective in ≤2 clicks from load.
+Exact N may update later. Shipped path is 1 click: a default puzzle is
+already on the board; Play runs diffusion. No setup tabs, no second confirm.
 """
 
 from __future__ import annotations

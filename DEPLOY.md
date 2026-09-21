@@ -46,7 +46,7 @@ Set `min_machines_running = 0` if you accept cold starts; keep 1 worker equivale
 
 Live: https://huggingface.co/spaces/Srini410/sokoflow
 
-Repo source of truth is `gradio_app/` (not the Space-only tree). The Space must stay **1-click**: a puzzle is on the board at load; **Play** runs diffusion. Colorful pieces, cream chrome.
+Repo source of truth is `gradio_app/` (not the Space-only tree). Firstmate bar: core objective in **≤2 clicks** from load (exact N may update later). Shipped path is 1 click: a puzzle is on the board at load; **Play** runs diffusion. Colorful pieces, cream chrome.
 
 Push (maintainer):
 

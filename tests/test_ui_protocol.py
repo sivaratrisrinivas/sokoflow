@@ -42,10 +42,19 @@ def test_scramble_hard_default_write_is_dated():
     assert out.resolve() != OUTPUT_PATH.resolve()
 
 
-def test_gradio_app_is_one_click_play():
+def test_gradio_core_objective_within_two_clicks():
+    """Firstmate provisional bar: ≤2 clicks from load. Exact N may update later.
+
+    Shipped path is 1: demo.load puts a puzzle on the board; Play runs diffusion.
+    """
     text = (ROOT / "gradio_app" / "app.py").read_text(encoding="utf-8")
     assert 'gr.Button("Play"' in text
     assert "demo.load(load_default" in text
     assert "gr.Slider" not in text
     assert "gr.Tab" not in text
-    assert text.count("gr.Button(") == 2  # Play + optional New, Play is required path
+    assert text.count("gr.Button(") == 2  # Play + optional New; New is not required
+    flask = (ROOT / "templates" / "index.html").read_text(encoding="utf-8")
+    assert 'id="btn">Play</button>' in flask
+    assert "newGame();" in flask
+    assert "playOnce()" in flask
+    assert "onclick=\"playOnce()\"" in flask

@@ -40,7 +40,7 @@ python app.py
 pip install -e ".[dev]" --extra-index-url https://download.pytorch.org/whl/cpu
 ```
 
-Open http://localhost:5000. A puzzle is already on the board. **Play** (one click) runs the diffusion path. First request loads PyTorch + 3.7MB weights; cold start can take tens of seconds on a tiny dyno.
+Open http://localhost:5000. A puzzle is already on the board. **Play** starts the diffusion path (Firstmate bar: ≤2 clicks from load; this demo ships 1). First request loads PyTorch + 3.7MB weights; cold start can take tens of seconds on a tiny dyno.
 
 ### Docker
 
@@ -55,7 +55,7 @@ Or: `docker compose up --build`
 
 ### Gradio / Hugging Face Space
 
-Source of truth: `gradio_app/`. Same 1-click rule: load shows a puzzle, **Play** runs diffusion.
+Source of truth: `gradio_app/`. Firstmate bar is ≤2 clicks from load; shipped path is 1: load shows a puzzle, **Play** runs diffusion.
 
 ```bash
 pip install -r gradio_app/requirements.txt
@@ -174,7 +174,7 @@ Guards: `MAX_CONTENT_LENGTH` default 16KiB; `RATE_LIMIT_PER_MINUTE` default 30 o
 | `sokoban_data_gen.py` | Dataset + BFS |
 | `sokoban_diffusion.pth` | Committed CPU weights (3.7MB) |
 | `eval/measure_solve_rate.py` | GS-T5 / scramble-hard / Microban harness |
-| `gradio_app/` | HF Space source of truth (1-click Play) |
+| `gradio_app/` | HF Space source of truth (≤2 clicks; ships 1-click Play) |
 | `tests/` | Engine, actions, weight load, eval smoke, API guards |
 | `Dockerfile` / `docker-compose.yml` | One-command Flask UI |
 

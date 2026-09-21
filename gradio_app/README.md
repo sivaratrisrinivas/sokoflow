@@ -12,7 +12,7 @@ pinned: false
 
 # SokoFlow
 
-CPU diffusion demo for 8×8 Sokoban. A puzzle is on the board at load; **Play** runs diffusion. One click.
+CPU diffusion demo for 8×8 Sokoban. A puzzle is on the board at load; **Play** runs diffusion (≤2 clicks from load; shipped as 1).
 
 Colorful pieces (wall / floor / box / goal / player / box-on-goal). Chrome is cream, not a Gradio control stack.
 
