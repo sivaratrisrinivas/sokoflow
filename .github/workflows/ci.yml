@@ -32,3 +32,8 @@ jobs:
         run: |
           python -c "from sokoban_diffusion import SokobanDiffusion; import torch, os; m=SokobanDiffusion(); m.load_state_dict(torch.load(os.environ['SOKOFLOW_MODEL_PATH'], map_location='cpu', weights_only=True)); print('model_ok', sum(p.numel() for p in m.parameters()))"
           python eval/measure_solve_rate.py --smoke
+
+      - name: Scramble-hard regression gate (240 puzzles, exact match to committed results)
+        run: |
+          python eval/measure_solve_rate.py --protocol scramble-hard --output /tmp/scramble_hard.json
+          python eval/check_regression.py /tmp/scramble_hard.json
