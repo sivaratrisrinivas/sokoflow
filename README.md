@@ -142,6 +142,19 @@ Date: **2026-09-21**. Same model. Elapsed 12.5s.
 
 The single diffusion win is Microban 44 ("Duh!"), a 5×3 one-push puzzle. JSON: `eval/microban_ood_solve_rate.json`. Levels: `eval/microban_levels.py`.
 
+## Evals
+
+Two eval sets, both scored by code (a puzzle is solved only if the engine reaches the goal state), so no LLM judge is involved:
+
+- **Scramble-hard, 240 generated puzzles** (20 per box-count and scramble-length config, seed 42). Each board is made by scrambling a solved board backward and kept only if at least 2 boxes are off target and the BFS path is 5 moves or longer. BFS is the baseline. Diffusion solves 15/240 (6.2%); BFS solves 226/240 (94.2%).
+- **Microban OOD, 38 real hand-made levels** that fit 8x8. Diffusion solves 1/38; BFS 30/38.
+
+What the numbers say: the diffusion model solves only short, 2-box-off puzzles (all 15 wins had BFS length 5 to 10). It does not yet compete with BFS.
+
+**Regression gate.** The scramble-hard run is deterministic. A rerun on 2026-10-02, on a machine under heavy load, matched the committed result on all 240 puzzles (same BFS and diffusion outcome and path length for each). CI now reruns scramble-hard and `eval/check_regression.py` fails the build if any puzzle changes, so a model, engine, or sampler change cannot quietly move the headline number. To accept an intended change, rerun the measurement and commit the new `eval/scramble_hard_solve_rate.json` with the reason in the commit message.
+
+**Monitoring path.** `/api/solve` could log puzzle hash, box count, BFS length, and whether diffusion solved it (no user data is involved). Sample those weekly and compare the solve rate by box count with the scramble-hard table; a gap means live boards differ from the eval distribution.
+
 ## Limitations
 
 - **Headline is 6.2%, not 20.8%.** GS-T5 included 1-box-off and short-path boards that training mostly never saw.
