@@ -1,0 +1,2275 @@
+{
+ "puzzles": 240,
+ "match_committed": 240,
+ "fast_failures": 225,
+ "demo_solver_solved_fast_failures": 6,
+ "stop_reason": {
+  "no_progress": 219,
+  "solved": 6
+ },
+ "first_illegal_move": {
+  "walk_into_wall": 182,
+  "none": 1,
+  "stuck_push_wall": 33,
+  "stuck_push_box": 9
+ },
+ "boxes_off_after": {
+  "2": 110,
+  "1": 24,
+  "0": 6,
+  "3": 67,
+  "4": 18
+ },
+ "rows": [
+  {
+   "id": 1,
+   "num_boxes": 2,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 187,
+   "demo_solved": false
+  },
+  {
+   "id": 2,
+   "num_boxes": 2,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 65,
+   "demo_solved": false
+  },
+  {
+   "id": 3,
+   "num_boxes": 2,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 31,
+   "demo_solved": false
+  },
+  {
+   "id": 4,
+   "num_boxes": 2,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 41,
+   "demo_solved": false
+  },
+  {
+   "id": 5,
+   "num_boxes": 2,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 38,
+   "demo_solved": false
+  },
+  {
+   "id": 6,
+   "num_boxes": 2,
+   "bfs_length": 5,
+   "reason": "solved",
+   "first_illegal": null,
+   "boxes_off_after": 0,
+   "legal_prefix": 5,
+   "demo_solved": true
+  },
+  {
+   "id": 7,
+   "num_boxes": 2,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 86,
+   "demo_solved": false
+  },
+  {
+   "id": 8,
+   "num_boxes": 2,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 74,
+   "demo_solved": false
+  },
+  {
+   "id": 9,
+   "num_boxes": 2,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 19,
+   "demo_solved": false
+  },
+  {
+   "id": 10,
+   "num_boxes": 2,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 15,
+   "demo_solved": false
+  },
+  {
+   "id": 11,
+   "num_boxes": 2,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 46,
+   "demo_solved": false
+  },
+  {
+   "id": 12,
+   "num_boxes": 2,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 84,
+   "demo_solved": false
+  },
+  {
+   "id": 13,
+   "num_boxes": 2,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 106,
+   "demo_solved": false
+  },
+  {
+   "id": 14,
+   "num_boxes": 2,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 31,
+   "demo_solved": false
+  },
+  {
+   "id": 16,
+   "num_boxes": 2,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 32,
+   "demo_solved": false
+  },
+  {
+   "id": 18,
+   "num_boxes": 2,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 22,
+   "demo_solved": false
+  },
+  {
+   "id": 19,
+   "num_boxes": 2,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 36,
+   "demo_solved": false
+  },
+  {
+   "id": 20,
+   "num_boxes": 2,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 32,
+   "demo_solved": false
+  },
+  {
+   "id": 21,
+   "num_boxes": 2,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 67,
+   "demo_solved": false
+  },
+  {
+   "id": 22,
+   "num_boxes": 2,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 43,
+   "demo_solved": false
+  },
+  {
+   "id": 24,
+   "num_boxes": 2,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 65,
+   "demo_solved": false
+  },
+  {
+   "id": 25,
+   "num_boxes": 2,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 71,
+   "demo_solved": false
+  },
+  {
+   "id": 26,
+   "num_boxes": 2,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 77,
+   "demo_solved": false
+  },
+  {
+   "id": 27,
+   "num_boxes": 2,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 80,
+   "demo_solved": false
+  },
+  {
+   "id": 28,
+   "num_boxes": 2,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 29,
+   "demo_solved": false
+  },
+  {
+   "id": 29,
+   "num_boxes": 2,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 72,
+   "demo_solved": false
+  },
+  {
+   "id": 30,
+   "num_boxes": 2,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 44,
+   "demo_solved": false
+  },
+  {
+   "id": 31,
+   "num_boxes": 2,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 62,
+   "demo_solved": false
+  },
+  {
+   "id": 32,
+   "num_boxes": 2,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 92,
+   "demo_solved": false
+  },
+  {
+   "id": 33,
+   "num_boxes": 2,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 43,
+   "demo_solved": false
+  },
+  {
+   "id": 34,
+   "num_boxes": 2,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 53,
+   "demo_solved": false
+  },
+  {
+   "id": 35,
+   "num_boxes": 2,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 33,
+   "demo_solved": false
+  },
+  {
+   "id": 36,
+   "num_boxes": 2,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 12,
+   "demo_solved": false
+  },
+  {
+   "id": 37,
+   "num_boxes": 2,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 88,
+   "demo_solved": false
+  },
+  {
+   "id": 38,
+   "num_boxes": 2,
+   "bfs_length": 8,
+   "reason": "solved",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 0,
+   "legal_prefix": 30,
+   "demo_solved": true
+  },
+  {
+   "id": 39,
+   "num_boxes": 2,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 19,
+   "demo_solved": false
+  },
+  {
+   "id": 40,
+   "num_boxes": 2,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 84,
+   "demo_solved": false
+  },
+  {
+   "id": 41,
+   "num_boxes": 2,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 27,
+   "demo_solved": false
+  },
+  {
+   "id": 42,
+   "num_boxes": 2,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 77,
+   "demo_solved": false
+  },
+  {
+   "id": 44,
+   "num_boxes": 2,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 17,
+   "demo_solved": false
+  },
+  {
+   "id": 45,
+   "num_boxes": 2,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 54,
+   "demo_solved": false
+  },
+  {
+   "id": 46,
+   "num_boxes": 2,
+   "bfs_length": 12,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 61,
+   "demo_solved": false
+  },
+  {
+   "id": 47,
+   "num_boxes": 2,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 18,
+   "demo_solved": false
+  },
+  {
+   "id": 48,
+   "num_boxes": 2,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 74,
+   "demo_solved": false
+  },
+  {
+   "id": 49,
+   "num_boxes": 2,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 37,
+   "demo_solved": false
+  },
+  {
+   "id": 50,
+   "num_boxes": 2,
+   "bfs_length": 12,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 135,
+   "demo_solved": false
+  },
+  {
+   "id": 51,
+   "num_boxes": 2,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 82,
+   "demo_solved": false
+  },
+  {
+   "id": 52,
+   "num_boxes": 2,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 42,
+   "demo_solved": false
+  },
+  {
+   "id": 54,
+   "num_boxes": 2,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 61,
+   "demo_solved": false
+  },
+  {
+   "id": 55,
+   "num_boxes": 2,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 40,
+   "demo_solved": false
+  },
+  {
+   "id": 56,
+   "num_boxes": 2,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 85,
+   "demo_solved": false
+  },
+  {
+   "id": 57,
+   "num_boxes": 2,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 106,
+   "demo_solved": false
+  },
+  {
+   "id": 58,
+   "num_boxes": 2,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 31,
+   "demo_solved": false
+  },
+  {
+   "id": 59,
+   "num_boxes": 2,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 23,
+   "demo_solved": false
+  },
+  {
+   "id": 60,
+   "num_boxes": 2,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 77,
+   "demo_solved": false
+  },
+  {
+   "id": 61,
+   "num_boxes": 3,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 10,
+   "demo_solved": false
+  },
+  {
+   "id": 62,
+   "num_boxes": 3,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 49,
+   "demo_solved": false
+  },
+  {
+   "id": 63,
+   "num_boxes": 3,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 13,
+   "demo_solved": false
+  },
+  {
+   "id": 64,
+   "num_boxes": 3,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 69,
+   "demo_solved": false
+  },
+  {
+   "id": 65,
+   "num_boxes": 3,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 10,
+   "demo_solved": false
+  },
+  {
+   "id": 66,
+   "num_boxes": 3,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 69,
+   "demo_solved": false
+  },
+  {
+   "id": 67,
+   "num_boxes": 3,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 35,
+   "demo_solved": false
+  },
+  {
+   "id": 68,
+   "num_boxes": 3,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 114,
+   "demo_solved": false
+  },
+  {
+   "id": 69,
+   "num_boxes": 3,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 139,
+   "demo_solved": false
+  },
+  {
+   "id": 70,
+   "num_boxes": 3,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 46,
+   "demo_solved": false
+  },
+  {
+   "id": 71,
+   "num_boxes": 3,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 71,
+   "demo_solved": false
+  },
+  {
+   "id": 72,
+   "num_boxes": 3,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 25,
+   "demo_solved": false
+  },
+  {
+   "id": 73,
+   "num_boxes": 3,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 42,
+   "demo_solved": false
+  },
+  {
+   "id": 74,
+   "num_boxes": 3,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 60,
+   "demo_solved": false
+  },
+  {
+   "id": 75,
+   "num_boxes": 3,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 14,
+   "demo_solved": false
+  },
+  {
+   "id": 76,
+   "num_boxes": 3,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 48,
+   "demo_solved": false
+  },
+  {
+   "id": 77,
+   "num_boxes": 3,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 77,
+   "demo_solved": false
+  },
+  {
+   "id": 78,
+   "num_boxes": 3,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_box",
+   "boxes_off_after": 3,
+   "legal_prefix": 32,
+   "demo_solved": false
+  },
+  {
+   "id": 79,
+   "num_boxes": 3,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 109,
+   "demo_solved": false
+  },
+  {
+   "id": 80,
+   "num_boxes": 3,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 91,
+   "demo_solved": false
+  },
+  {
+   "id": 81,
+   "num_boxes": 3,
+   "bfs_length": 14,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 73,
+   "demo_solved": false
+  },
+  {
+   "id": 82,
+   "num_boxes": 3,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 89,
+   "demo_solved": false
+  },
+  {
+   "id": 83,
+   "num_boxes": 3,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 85,
+   "demo_solved": false
+  },
+  {
+   "id": 84,
+   "num_boxes": 3,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 43,
+   "demo_solved": false
+  },
+  {
+   "id": 85,
+   "num_boxes": 3,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 12,
+   "demo_solved": false
+  },
+  {
+   "id": 86,
+   "num_boxes": 3,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 70,
+   "demo_solved": false
+  },
+  {
+   "id": 87,
+   "num_boxes": 3,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 114,
+   "demo_solved": false
+  },
+  {
+   "id": 88,
+   "num_boxes": 3,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 46,
+   "demo_solved": false
+  },
+  {
+   "id": 89,
+   "num_boxes": 3,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 44,
+   "demo_solved": false
+  },
+  {
+   "id": 90,
+   "num_boxes": 3,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 23,
+   "demo_solved": false
+  },
+  {
+   "id": 91,
+   "num_boxes": 3,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 88,
+   "demo_solved": false
+  },
+  {
+   "id": 92,
+   "num_boxes": 3,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 132,
+   "demo_solved": false
+  },
+  {
+   "id": 93,
+   "num_boxes": 3,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 68,
+   "demo_solved": false
+  },
+  {
+   "id": 94,
+   "num_boxes": 3,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 105,
+   "demo_solved": false
+  },
+  {
+   "id": 95,
+   "num_boxes": 3,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 15,
+   "demo_solved": false
+  },
+  {
+   "id": 96,
+   "num_boxes": 3,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 74,
+   "demo_solved": false
+  },
+  {
+   "id": 97,
+   "num_boxes": 3,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 36,
+   "demo_solved": false
+  },
+  {
+   "id": 98,
+   "num_boxes": 3,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 19,
+   "demo_solved": false
+  },
+  {
+   "id": 99,
+   "num_boxes": 3,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 74,
+   "demo_solved": false
+  },
+  {
+   "id": 100,
+   "num_boxes": 3,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 30,
+   "demo_solved": false
+  },
+  {
+   "id": 103,
+   "num_boxes": 3,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 104,
+   "demo_solved": false
+  },
+  {
+   "id": 105,
+   "num_boxes": 3,
+   "bfs_length": 12,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 26,
+   "demo_solved": false
+  },
+  {
+   "id": 106,
+   "num_boxes": 3,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 94,
+   "demo_solved": false
+  },
+  {
+   "id": 107,
+   "num_boxes": 3,
+   "bfs_length": 13,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 119,
+   "demo_solved": false
+  },
+  {
+   "id": 108,
+   "num_boxes": 3,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 70,
+   "demo_solved": false
+  },
+  {
+   "id": 109,
+   "num_boxes": 3,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 65,
+   "demo_solved": false
+  },
+  {
+   "id": 110,
+   "num_boxes": 3,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 62,
+   "demo_solved": false
+  },
+  {
+   "id": 111,
+   "num_boxes": 3,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 50,
+   "demo_solved": false
+  },
+  {
+   "id": 112,
+   "num_boxes": 3,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 16,
+   "demo_solved": false
+  },
+  {
+   "id": 113,
+   "num_boxes": 3,
+   "bfs_length": 14,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 63,
+   "demo_solved": false
+  },
+  {
+   "id": 114,
+   "num_boxes": 3,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_box",
+   "boxes_off_after": 2,
+   "legal_prefix": 40,
+   "demo_solved": false
+  },
+  {
+   "id": 115,
+   "num_boxes": 3,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 44,
+   "demo_solved": false
+  },
+  {
+   "id": 116,
+   "num_boxes": 3,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 29,
+   "demo_solved": false
+  },
+  {
+   "id": 117,
+   "num_boxes": 3,
+   "bfs_length": 13,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 72,
+   "demo_solved": false
+  },
+  {
+   "id": 118,
+   "num_boxes": 3,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 88,
+   "demo_solved": false
+  },
+  {
+   "id": 119,
+   "num_boxes": 3,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 66,
+   "demo_solved": false
+  },
+  {
+   "id": 120,
+   "num_boxes": 3,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 27,
+   "demo_solved": false
+  },
+  {
+   "id": 122,
+   "num_boxes": 3,
+   "bfs_length": 13,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 27,
+   "demo_solved": false
+  },
+  {
+   "id": 123,
+   "num_boxes": 3,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 30,
+   "demo_solved": false
+  },
+  {
+   "id": 124,
+   "num_boxes": 3,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_box",
+   "boxes_off_after": 2,
+   "legal_prefix": 79,
+   "demo_solved": false
+  },
+  {
+   "id": 125,
+   "num_boxes": 3,
+   "bfs_length": 13,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 27,
+   "demo_solved": false
+  },
+  {
+   "id": 126,
+   "num_boxes": 3,
+   "bfs_length": 12,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 11,
+   "demo_solved": false
+  },
+  {
+   "id": 127,
+   "num_boxes": 3,
+   "bfs_length": 14,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 45,
+   "demo_solved": false
+  },
+  {
+   "id": 128,
+   "num_boxes": 3,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 30,
+   "demo_solved": false
+  },
+  {
+   "id": 129,
+   "num_boxes": 3,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 37,
+   "demo_solved": false
+  },
+  {
+   "id": 130,
+   "num_boxes": 3,
+   "bfs_length": 12,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 50,
+   "demo_solved": false
+  },
+  {
+   "id": 131,
+   "num_boxes": 3,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 15,
+   "demo_solved": false
+  },
+  {
+   "id": 132,
+   "num_boxes": 3,
+   "bfs_length": 16,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 102,
+   "demo_solved": false
+  },
+  {
+   "id": 133,
+   "num_boxes": 3,
+   "bfs_length": 12,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 24,
+   "demo_solved": false
+  },
+  {
+   "id": 134,
+   "num_boxes": 3,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 16,
+   "demo_solved": false
+  },
+  {
+   "id": 135,
+   "num_boxes": 3,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 59,
+   "demo_solved": false
+  },
+  {
+   "id": 136,
+   "num_boxes": 3,
+   "bfs_length": 12,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 13,
+   "demo_solved": false
+  },
+  {
+   "id": 137,
+   "num_boxes": 3,
+   "bfs_length": 16,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 123,
+   "demo_solved": false
+  },
+  {
+   "id": 139,
+   "num_boxes": 3,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 132,
+   "demo_solved": false
+  },
+  {
+   "id": 140,
+   "num_boxes": 3,
+   "bfs_length": 13,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 51,
+   "demo_solved": false
+  },
+  {
+   "id": 141,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 82,
+   "demo_solved": false
+  },
+  {
+   "id": 142,
+   "num_boxes": 4,
+   "bfs_length": 6,
+   "reason": "solved",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 0,
+   "legal_prefix": 14,
+   "demo_solved": true
+  },
+  {
+   "id": 143,
+   "num_boxes": 4,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 72,
+   "demo_solved": false
+  },
+  {
+   "id": 144,
+   "num_boxes": 4,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 45,
+   "demo_solved": false
+  },
+  {
+   "id": 145,
+   "num_boxes": 4,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 82,
+   "demo_solved": false
+  },
+  {
+   "id": 146,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 22,
+   "demo_solved": false
+  },
+  {
+   "id": 147,
+   "num_boxes": 4,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 29,
+   "demo_solved": false
+  },
+  {
+   "id": 148,
+   "num_boxes": 4,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 89,
+   "demo_solved": false
+  },
+  {
+   "id": 150,
+   "num_boxes": 4,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 78,
+   "demo_solved": false
+  },
+  {
+   "id": 151,
+   "num_boxes": 4,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 101,
+   "demo_solved": false
+  },
+  {
+   "id": 152,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 30,
+   "demo_solved": false
+  },
+  {
+   "id": 153,
+   "num_boxes": 4,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 45,
+   "demo_solved": false
+  },
+  {
+   "id": 154,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 65,
+   "demo_solved": false
+  },
+  {
+   "id": 155,
+   "num_boxes": 4,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 18,
+   "demo_solved": false
+  },
+  {
+   "id": 156,
+   "num_boxes": 4,
+   "bfs_length": 5,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 19,
+   "demo_solved": false
+  },
+  {
+   "id": 157,
+   "num_boxes": 4,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_box",
+   "boxes_off_after": 3,
+   "legal_prefix": 45,
+   "demo_solved": false
+  },
+  {
+   "id": 158,
+   "num_boxes": 4,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_box",
+   "boxes_off_after": 3,
+   "legal_prefix": 83,
+   "demo_solved": false
+  },
+  {
+   "id": 159,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 45,
+   "demo_solved": false
+  },
+  {
+   "id": 160,
+   "num_boxes": 4,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 87,
+   "demo_solved": false
+  },
+  {
+   "id": 161,
+   "num_boxes": 4,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 90,
+   "demo_solved": false
+  },
+  {
+   "id": 162,
+   "num_boxes": 4,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 28,
+   "demo_solved": false
+  },
+  {
+   "id": 163,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 134,
+   "demo_solved": false
+  },
+  {
+   "id": 165,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 138,
+   "demo_solved": false
+  },
+  {
+   "id": 166,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 159,
+   "demo_solved": false
+  },
+  {
+   "id": 167,
+   "num_boxes": 4,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 23,
+   "demo_solved": false
+  },
+  {
+   "id": 168,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 119,
+   "demo_solved": false
+  },
+  {
+   "id": 169,
+   "num_boxes": 4,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 16,
+   "demo_solved": false
+  },
+  {
+   "id": 170,
+   "num_boxes": 4,
+   "bfs_length": 12,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 132,
+   "demo_solved": false
+  },
+  {
+   "id": 171,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 105,
+   "demo_solved": false
+  },
+  {
+   "id": 173,
+   "num_boxes": 4,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_box",
+   "boxes_off_after": 2,
+   "legal_prefix": 114,
+   "demo_solved": false
+  },
+  {
+   "id": 174,
+   "num_boxes": 4,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 39,
+   "demo_solved": false
+  },
+  {
+   "id": 175,
+   "num_boxes": 4,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 92,
+   "demo_solved": false
+  },
+  {
+   "id": 176,
+   "num_boxes": 4,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 85,
+   "demo_solved": false
+  },
+  {
+   "id": 177,
+   "num_boxes": 4,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 40,
+   "demo_solved": false
+  },
+  {
+   "id": 178,
+   "num_boxes": 4,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 66,
+   "demo_solved": false
+  },
+  {
+   "id": 179,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 61,
+   "demo_solved": false
+  },
+  {
+   "id": 180,
+   "num_boxes": 4,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 65,
+   "demo_solved": false
+  },
+  {
+   "id": 181,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 33,
+   "demo_solved": false
+  },
+  {
+   "id": 182,
+   "num_boxes": 4,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 54,
+   "demo_solved": false
+  },
+  {
+   "id": 183,
+   "num_boxes": 4,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 53,
+   "demo_solved": false
+  },
+  {
+   "id": 184,
+   "num_boxes": 4,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 100,
+   "demo_solved": false
+  },
+  {
+   "id": 185,
+   "num_boxes": 4,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 59,
+   "demo_solved": false
+  },
+  {
+   "id": 186,
+   "num_boxes": 4,
+   "bfs_length": 12,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_box",
+   "boxes_off_after": 2,
+   "legal_prefix": 74,
+   "demo_solved": false
+  },
+  {
+   "id": 187,
+   "num_boxes": 4,
+   "bfs_length": 14,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 39,
+   "demo_solved": false
+  },
+  {
+   "id": 188,
+   "num_boxes": 4,
+   "bfs_length": 13,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 107,
+   "demo_solved": false
+  },
+  {
+   "id": 189,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 13,
+   "demo_solved": false
+  },
+  {
+   "id": 190,
+   "num_boxes": 4,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 88,
+   "demo_solved": false
+  },
+  {
+   "id": 191,
+   "num_boxes": 4,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 63,
+   "demo_solved": false
+  },
+  {
+   "id": 192,
+   "num_boxes": 4,
+   "bfs_length": 14,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 30,
+   "demo_solved": false
+  },
+  {
+   "id": 193,
+   "num_boxes": 4,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 41,
+   "demo_solved": false
+  },
+  {
+   "id": 194,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "solved",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 0,
+   "legal_prefix": 9,
+   "demo_solved": true
+  },
+  {
+   "id": 195,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 35,
+   "demo_solved": false
+  },
+  {
+   "id": 196,
+   "num_boxes": 4,
+   "bfs_length": 15,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 13,
+   "demo_solved": false
+  },
+  {
+   "id": 197,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_box",
+   "boxes_off_after": 3,
+   "legal_prefix": 159,
+   "demo_solved": false
+  },
+  {
+   "id": 199,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 12,
+   "demo_solved": false
+  },
+  {
+   "id": 200,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 12,
+   "demo_solved": false
+  },
+  {
+   "id": 201,
+   "num_boxes": 4,
+   "bfs_length": 13,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 82,
+   "demo_solved": false
+  },
+  {
+   "id": 202,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 21,
+   "demo_solved": false
+  },
+  {
+   "id": 203,
+   "num_boxes": 4,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 67,
+   "demo_solved": false
+  },
+  {
+   "id": 204,
+   "num_boxes": 4,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 90,
+   "demo_solved": false
+  },
+  {
+   "id": 205,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 99,
+   "demo_solved": false
+  },
+  {
+   "id": 206,
+   "num_boxes": 4,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 49,
+   "demo_solved": false
+  },
+  {
+   "id": 207,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_box",
+   "boxes_off_after": 2,
+   "legal_prefix": 32,
+   "demo_solved": false
+  },
+  {
+   "id": 208,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 68,
+   "demo_solved": false
+  },
+  {
+   "id": 209,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 92,
+   "demo_solved": false
+  },
+  {
+   "id": 210,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "solved",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 0,
+   "legal_prefix": 7,
+   "demo_solved": true
+  },
+  {
+   "id": 211,
+   "num_boxes": 4,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 38,
+   "demo_solved": false
+  },
+  {
+   "id": 212,
+   "num_boxes": 4,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 15,
+   "demo_solved": false
+  },
+  {
+   "id": 213,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 42,
+   "demo_solved": false
+  },
+  {
+   "id": 214,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 112,
+   "demo_solved": false
+  },
+  {
+   "id": 215,
+   "num_boxes": 4,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 134,
+   "demo_solved": false
+  },
+  {
+   "id": 216,
+   "num_boxes": 4,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 83,
+   "demo_solved": false
+  },
+  {
+   "id": 217,
+   "num_boxes": 4,
+   "bfs_length": 7,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 8,
+   "demo_solved": false
+  },
+  {
+   "id": 218,
+   "num_boxes": 4,
+   "bfs_length": 13,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 79,
+   "demo_solved": false
+  },
+  {
+   "id": 219,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 91,
+   "demo_solved": false
+  },
+  {
+   "id": 220,
+   "num_boxes": 4,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 10,
+   "demo_solved": false
+  },
+  {
+   "id": 221,
+   "num_boxes": 4,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 197,
+   "demo_solved": false
+  },
+  {
+   "id": 222,
+   "num_boxes": 4,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 37,
+   "demo_solved": false
+  },
+  {
+   "id": 223,
+   "num_boxes": 4,
+   "bfs_length": 13,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 1,
+   "legal_prefix": 72,
+   "demo_solved": false
+  },
+  {
+   "id": 224,
+   "num_boxes": 4,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 58,
+   "demo_solved": false
+  },
+  {
+   "id": 225,
+   "num_boxes": 4,
+   "bfs_length": 12,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 69,
+   "demo_solved": false
+  },
+  {
+   "id": 226,
+   "num_boxes": 4,
+   "bfs_length": 12,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 64,
+   "demo_solved": false
+  },
+  {
+   "id": 227,
+   "num_boxes": 4,
+   "bfs_length": 9,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 25,
+   "demo_solved": false
+  },
+  {
+   "id": 229,
+   "num_boxes": 4,
+   "bfs_length": 10,
+   "reason": "solved",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 0,
+   "legal_prefix": 25,
+   "demo_solved": true
+  },
+  {
+   "id": 230,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 42,
+   "demo_solved": false
+  },
+  {
+   "id": 231,
+   "num_boxes": 4,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 54,
+   "demo_solved": false
+  },
+  {
+   "id": 232,
+   "num_boxes": 4,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 85,
+   "demo_solved": false
+  },
+  {
+   "id": 233,
+   "num_boxes": 4,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 70,
+   "demo_solved": false
+  },
+  {
+   "id": 234,
+   "num_boxes": 4,
+   "bfs_length": 11,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 4,
+   "legal_prefix": 95,
+   "demo_solved": false
+  },
+  {
+   "id": 235,
+   "num_boxes": 4,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 13,
+   "demo_solved": false
+  },
+  {
+   "id": 236,
+   "num_boxes": 4,
+   "bfs_length": null,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 63,
+   "demo_solved": false
+  },
+  {
+   "id": 237,
+   "num_boxes": 4,
+   "bfs_length": 8,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 126,
+   "demo_solved": false
+  },
+  {
+   "id": 238,
+   "num_boxes": 4,
+   "bfs_length": 10,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 2,
+   "legal_prefix": 55,
+   "demo_solved": false
+  },
+  {
+   "id": 239,
+   "num_boxes": 4,
+   "bfs_length": 6,
+   "reason": "no_progress",
+   "first_illegal": "walk_into_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 41,
+   "demo_solved": false
+  },
+  {
+   "id": 240,
+   "num_boxes": 4,
+   "bfs_length": 15,
+   "reason": "no_progress",
+   "first_illegal": "stuck_push_wall",
+   "boxes_off_after": 3,
+   "legal_prefix": 46,
+   "demo_solved": false
+  }
+ ]
+}
